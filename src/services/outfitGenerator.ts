@@ -29,7 +29,7 @@ function colorPairScore(a: ColorName, b: ColorName): number {
 }
 
 /** Score entre deux vêtements : moyenne sur toutes leurs couleurs (un t-shirt rayé en a plusieurs). */
-function itemPairScore(a: ClothingItem, b: ClothingItem): number {
+export function itemPairScore(a: ClothingItem, b: ClothingItem): number {
   const ca = allColors(a);
   const cb = allColors(b);
   let sum = 0;

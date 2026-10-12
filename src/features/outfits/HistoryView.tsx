@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useMemo } from 'react';
-import { Alert, Image, Pressable, SafeAreaView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { useHistory } from '@/hooks/useHistory';
 import { useWardrobe } from '@/hooks/useWardrobe';
@@ -18,7 +18,7 @@ function dayTitle(t: number): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export default function HistoryScreen() {
+export default function HistoryView() {
   const { items, reload: reloadItems } = useWardrobe();
   const { entries, reload, removeEntry, clearAll } = useHistory();
 
@@ -68,7 +68,7 @@ export default function HistoryScreen() {
     ]);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <SectionList
         sections={sections}
         keyExtractor={(e) => e.id}
@@ -136,7 +136,7 @@ export default function HistoryScreen() {
           </View>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

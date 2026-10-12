@@ -27,11 +27,11 @@ export default function AppTabs() {
           <TabTrigger name="wardrobe" href="/wardrobe" asChild>
             <TabButton>Dressing</TabButton>
           </TabTrigger>
-          <TabTrigger name="favorite" href="/favorites" asChild>
-            <TabButton>Favoris</TabButton>
+          <TabTrigger name="trip" href="/trip" asChild>
+            <TabButton>Valise</TabButton>
           </TabTrigger>
-          <TabTrigger name="history" href="/history" asChild>
-            <TabButton>Historique</TabButton>
+          <TabTrigger name="outfits" href="/outfits" asChild>
+            <TabButton>Mes tenues</TabButton>
           </TabTrigger>
           
         </CustomTabList>

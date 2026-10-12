@@ -7,7 +7,9 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 
 import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
+import MorningReminderModal from '@/features/notifications/MorningReminderModal';
 import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
+import { refreshMorningReminders } from '@/services/morningReminder';
 import { getCurrentWeather, WeatherError } from '@/services/weatherService';
 import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { useHistory } from '@/hooks/useHistory';
@@ -37,6 +39,7 @@ export default function HomeScreen() {
   const [occasion, setOccasion] = useState<Style>('casual');
   const [queue, setQueue] = useState<Outfit[]>([]);
   const [lastAction, setLastAction] = useState<LastAction | null>(null);
+  const [reminderOpen, setReminderOpen] = useState(false);
   const seenRef = useRef<Set<string>>(new Set());
   const deckRef = useRef<SwipeDeckHandle>(null);
 
@@ -64,6 +67,9 @@ export default function HomeScreen() {
     }
   }, []);
   useEffect(() => { loadWeather(); }, [loadWeather]);
+
+  // Remet à jour les rappels du matin avec la dernière prévision (sans bloquer l'écran)
+  useEffect(() => { refreshMorningReminders().catch(() => {}); }, []);
 
   /** Tire une nouvelle tenue jamais vue dans cette série. */
   const draw = useCallback((): Outfit | null => {
@@ -167,6 +173,9 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.weatherCard}>
+          <Pressable style={styles.bell} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
+            <MaterialCommunityIcons name="bell-outline" size={24} color="#222" />
+          </Pressable>
           {weather.city && <Text style={styles.city}>{weather.city}</Text>}
           <Text style={styles.temp}>{Math.round(weather.temperature)}°C</Text>
           <View style={styles.weatherRow}>
@@ -253,6 +262,8 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      <MorningReminderModal visible={reminderOpen} onClose={() => setReminderOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -263,6 +274,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   error: { fontSize: 16, textAlign: 'center' },
   weatherCard: { backgroundColor: '#e8f1ff', borderRadius: 16, padding: 20, alignItems: 'center' },
+  bell: { position: 'absolute', top: 12, right: 12, padding: 4, zIndex: 1 },
   temp: { fontSize: 48, fontWeight: '700' },
   city: { fontSize: 16, fontWeight: '600', color: '#444' },
   weatherRow: { flexDirection: 'row', gap: 24, marginTop: 8 },

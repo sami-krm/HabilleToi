@@ -22,13 +22,13 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf={{ default: 'tshirt', selected: 'tshirt.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="history">
-        <NativeTabs.Trigger.Label>Historique</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'clock', selected: 'clock.fill' }} />
+      <NativeTabs.Trigger name="trip">
+        <NativeTabs.Trigger.Label>Valise</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'suitcase', selected: 'suitcase.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="favorites">
-        <NativeTabs.Trigger.Label>Favoris</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="outfits">
+        <NativeTabs.Trigger.Label>Mes tenues</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf={{ default: 'star', selected: 'star.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>

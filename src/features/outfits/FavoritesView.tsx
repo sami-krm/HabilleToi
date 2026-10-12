@@ -1,13 +1,13 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { loadFavorites, saveFavorites } from '@/storage/wardrobeStorage';
 import type { FavoriteOutfit } from '@/types';
 
-export default function FavoritesScreen() {
+export default function FavoritesView() {
   const [favorites, setFavorites] = useState<FavoriteOutfit[]>([]);
   const { items, reload } = useWardrobe();
 
@@ -32,7 +32,7 @@ export default function FavoritesScreen() {
     ]);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <FlatList
         // Les plus récentes en premier
         data={[...favorites].sort((a, b) => b.createdAt - a.createdAt)}
@@ -80,7 +80,7 @@ export default function FavoritesScreen() {
           );
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

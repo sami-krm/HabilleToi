@@ -34,7 +34,8 @@
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
     "react-native-webview": "13.16.1",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "undefined": "react-native-community/datetimepicker"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
