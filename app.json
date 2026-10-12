@@ -32,6 +32,19 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Pour afficher la météo de ta position et choisir ta tenue."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Pour importer les photos de tes vêtements.",
+          "cameraPermission": "Pour photographier tes vêtements."
+        }
       ]
     ],
     "experiments": {

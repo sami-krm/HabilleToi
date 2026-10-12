@@ -13,19 +13,23 @@ export default function AppTabs() {
       indicatorColor={colors.backgroundElement}
       labelStyle={{ selected: { color: colors.text } }}>
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/home.png')}
-          renderingMode="template"
-        />
+        <NativeTabs.Trigger.Label>Tenue</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'cloud.sun', selected: 'cloud.sun.fill' }} />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="explore">
-        <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
-        />
+      <NativeTabs.Trigger name="wardrobe">
+        <NativeTabs.Trigger.Label>Dressing</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'tshirt', selected: 'tshirt.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="history">
+        <NativeTabs.Trigger.Label>Historique</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'clock', selected: 'clock.fill' }} />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="favorites">
+        <NativeTabs.Trigger.Label>Favoris</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'star', selected: 'star.fill' }} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

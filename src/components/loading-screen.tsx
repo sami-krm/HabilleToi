@@ -1,0 +1,45 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useEffect, useRef } from 'react';
+import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
+
+const APP_NAME = 'Tenue du jour'; // à adapter
+
+export default function LoadingScreen() {
+  const pulse = useRef(new Animated.Value(0)).current;
+
+  // Icône qui « respire »
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+
+  const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+
+  return (
+    <View style={styles.container}>
+      <Animated.View style={[styles.logo, { transform: [{ scale }] }]}>
+        <MaterialCommunityIcons name="hanger" size={64} color="#208AEF" />
+      </Animated.View>
+      <Text style={styles.name}>{APP_NAME}</Text>
+      <Text style={styles.tagline}>On regarde la météo…</Text>
+      <ActivityIndicator color="#fff" style={styles.spinner} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#208AEF', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  logo: {
+    width: 120, height: 120, borderRadius: 30, backgroundColor: '#fff',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  },
+  name: { color: '#fff', fontSize: 28, fontWeight: '700' },
+  tagline: { color: '#E6F4FE', fontSize: 16 },
+  spinner: { marginTop: 24 },
+});
