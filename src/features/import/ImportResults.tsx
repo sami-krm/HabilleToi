@@ -5,6 +5,7 @@ import { FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, 
 import {
   COLOR_HEX, COLOR_ORDER, TYPE_LABELS, TYPE_ORDER, normalize, type FoundItem,
 } from './importUtils';
+import { Palette } from '@/constants/theme';
 
 type Row = FoundItem & { selected: boolean };
 
@@ -39,7 +40,7 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={26} color="#222" />
+          <MaterialCommunityIcons name="arrow-left" size={26} color={Palette.text} />
         </Pressable>
         <Text style={styles.title}>Tes articles ({rows.length})</Text>
         <Pressable onPress={toggleAll} hitSlop={12}>
@@ -52,7 +53,7 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
       </Text>
 
       <View style={styles.search}>
-        <MaterialCommunityIcons name="magnify" size={20} color="#666" />
+        <MaterialCommunityIcons name="magnify" size={20} color={Palette.textSecondary} />
         <TextInput
           style={styles.input}
           placeholder="Rechercher un article"
@@ -75,7 +76,7 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
               <MaterialCommunityIcons
                 name={item.selected ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
                 size={26}
-                color={item.selected ? '#2F6FED' : '#999'}
+                color={item.selected ? Palette.accent : Palette.textSecondary}
               />
             </Pressable>
             <Image source={{ uri: item.image }} style={styles.img} />
@@ -109,35 +110,35 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, gap: 12 },
-  title: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700' },
-  link: { color: '#2F6FED', fontWeight: '600' },
-  hint: { color: '#666', paddingHorizontal: 16, marginBottom: 8, fontSize: 13 },
+  title: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700', color: Palette.text },
+  link: { color: Palette.accent, fontWeight: '600' },
+  hint: { color: Palette.textSecondary, paddingHorizontal: 16, marginBottom: 8, fontSize: 13 },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8,
-    backgroundColor: '#f2f2f2', borderRadius: 12, paddingHorizontal: 12,
+    backgroundColor: Palette.surfaceRaised, borderColor: Palette.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12,
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 16 },
+  input: { flex: 1, paddingVertical: 12, fontSize: 16, color: Palette.text },
   list: { paddingHorizontal: 16, gap: 8, paddingBottom: 16 },
-  empty: { color: '#666', textAlign: 'center', marginTop: 24 },
+  empty: { color: Palette.textSecondary, textAlign: 'center', marginTop: 24 },
   row: {
     flexDirection: 'row', alignItems: 'center', gap: 10, padding: 8,
-    borderRadius: 12, backgroundColor: '#f6f6f6', borderWidth: 2, borderColor: 'transparent',
+    borderRadius: 14, backgroundColor: Palette.surface, borderWidth: 1, borderColor: Palette.border,
   },
-  rowActive: { borderColor: '#2F6FED', backgroundColor: '#e8f1ff' },
-  img: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  rowActive: { borderColor: Palette.accent, backgroundColor: Palette.accentSoft },
+  img: { width: 64, height: 64, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   info: { flex: 1, gap: 6 },
-  name: { fontSize: 14 },
+  name: { fontSize: 14, color: Palette.text },
   pills: { flexDirection: 'row', gap: 6 },
   pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#fff',
-    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: '#ddd',
+    flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Palette.surfaceRaised,
+    borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: Palette.border,
   },
-  pillText: { fontSize: 12, textTransform: 'capitalize' },
-  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: '#ccc' },
+  pillText: { fontSize: 12, textTransform: 'capitalize', color: Palette.textSecondary },
+  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: Palette.border },
   footer: { padding: 16 },
-  primary: { backgroundColor: '#222', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  primaryDisabled: { backgroundColor: '#bbb' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
+  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
 });

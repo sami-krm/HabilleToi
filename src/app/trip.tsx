@@ -12,6 +12,7 @@ import { generatePacking } from '@/services/packingGenerator';
 import { diffDays, formatShort } from '@/services/tripDates';
 import { getTripWeather, TripWeatherError } from '@/services/tripWeather';
 import { loadTrips, saveTrips } from '@/storage/tripStorage';
+import { Palette } from '@/constants/theme';
 
 type Screen = { name: 'list' } | { name: 'form' } | { name: 'result'; id: string };
 
@@ -128,14 +129,14 @@ export default function TripScreen() {
           <View style={styles.header}>
             <Text style={styles.title}>Mes valises</Text>
             <Pressable style={styles.btn} onPress={() => setScreen({ name: 'form' })}>
-              <MaterialCommunityIcons name="plus" size={18} color="#fff" />
+              <MaterialCommunityIcons name="plus" size={18} color={Palette.black} />
               <Text style={styles.btnText}>Nouvelle valise</Text>
             </Pressable>
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <MaterialCommunityIcons name="bag-suitcase-outline" size={48} color="#999" />
+            <MaterialCommunityIcons name="bag-suitcase-outline" size={48} color={Palette.accent} />
             <Text style={styles.emptyText}>
               Choisis une destination et des dates : l'app compose une valise de vêtements qui vont bien ensemble,
               adaptés à la météo du séjour.
@@ -148,7 +149,7 @@ export default function TripScreen() {
           const nights = diffDays(t.startDate, t.endDate) + 1;
           return (
             <Pressable style={styles.card} onPress={() => setScreen({ name: 'result', id: t.id })}>
-              <MaterialCommunityIcons name="bag-suitcase-outline" size={28} color="#2F6FED" />
+              <MaterialCommunityIcons name="bag-suitcase-outline" size={28} color={Palette.accent} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.cardTitle}>{t.place.name}</Text>
                 <Text style={styles.cardSub}>
@@ -156,7 +157,7 @@ export default function TripScreen() {
                 </Text>
                 <Text style={styles.cardSub}>{packed} / {total} pièces rangées</Text>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={24} color="#666" />
+              <MaterialCommunityIcons name="chevron-right" size={24} color={Palette.textSecondary} />
             </Pressable>
           );
         }}
@@ -166,18 +167,18 @@ export default function TripScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   header: { gap: 12, marginBottom: 8 },
-  title: { fontSize: 22, fontWeight: '700' },
+  title: { fontSize: 22, fontWeight: '700', color: Palette.text },
   empty: { alignItems: 'center', gap: 12, marginTop: 32 },
-  emptyText: { color: '#666', textAlign: 'center' },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f6f6f6', borderRadius: 14, padding: 14 },
-  cardTitle: { fontSize: 17, fontWeight: '700' },
-  cardSub: { color: '#666', fontSize: 13, textTransform: 'capitalize' },
+  emptyText: { color: Palette.textSecondary, textAlign: 'center' },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 18, padding: 14 },
+  cardTitle: { fontSize: 17, fontWeight: '700', color: Palette.text },
+  cardSub: { color: Palette.textSecondary, fontSize: 13, textTransform: 'capitalize' },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start',
-    backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: '#fff', fontWeight: '600' },
+  btnText: { color: Palette.black, fontWeight: '600' },
 });

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useWardrobe } from '@/hooks/useWardrobe';
+import { Palette } from '@/constants/theme';
 import { loadFavorites, saveFavorites } from '@/storage/wardrobeStorage';
 import type { FavoriteOutfit } from '@/types';
 
@@ -57,7 +58,7 @@ export default function FavoritesView() {
               <View style={styles.cardHeader}>
                 <Text style={styles.date}>{new Date(fav.createdAt).toLocaleDateString('fr-FR')}</Text>
                 <Pressable onPress={() => confirmRemove(fav.id)} hitSlop={10}>
-                  <MaterialCommunityIcons name="trash-can-outline" size={22} color="#8a4b2a" />
+                  <MaterialCommunityIcons name="trash-can-outline" size={22} color={Palette.danger} />
                 </Pressable>
               </View>
 
@@ -85,17 +86,17 @@ export default function FavoritesView() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 8 },
-  empty: { color: '#666', marginTop: 24 },
-  card: { backgroundColor: '#f6f6f6', borderRadius: 14, padding: 12, gap: 8 },
+  title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: Palette.text },
+  empty: { color: Palette.textSecondary, marginTop: 24 },
+  card: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 18, padding: 12, gap: 8 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  date: { color: '#666' },
+  date: { color: Palette.textSecondary },
   pieces: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   piece: { width: 72 },
-  img: { width: 72, height: 72, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  img: { width: 72, height: 72, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   imgDirty: { opacity: 0.4 },
-  pieceLabel: { fontSize: 12, textTransform: 'capitalize', marginTop: 2 },
-  note: { color: '#a15c00', fontSize: 13 },
+  pieceLabel: { fontSize: 12, textTransform: 'capitalize', marginTop: 2, color: Palette.text },
+  note: { color: Palette.warning, fontSize: 13 },
 });

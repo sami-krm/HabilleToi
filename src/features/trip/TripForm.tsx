@@ -8,6 +8,7 @@ import { addDaysISO, formatShort, todayISO } from '@/services/tripDates';
 import { searchPlaces } from '@/services/tripWeather';
 import type { Style } from '@/types';
 import type { Place } from './tripTypes';
+import { Palette } from '@/constants/theme';
 
 const OCCASIONS: { key: Style; label: string }[] = [
   { key: 'casual', label: 'Casual' },
@@ -104,14 +105,14 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Pressable onPress={onCancel} hitSlop={12}>
-            <MaterialCommunityIcons name="arrow-left" size={26} color="#222" />
+            <MaterialCommunityIcons name="arrow-left" size={26} color={Palette.text} />
           </Pressable>
           <Text style={styles.title}>Nouvelle valise</Text>
         </View>
 
         <Text style={styles.label}>Destination</Text>
         <View style={styles.search}>
-          <MaterialCommunityIcons name="map-marker-outline" size={20} color="#666" />
+          <MaterialCommunityIcons name="map-marker-outline" size={20} color={Palette.textSecondary} />
           <TextInput
             style={styles.input}
             placeholder="Ville (ex. Lisbonne)"
@@ -121,7 +122,7 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
             clearButtonMode="while-editing"
           />
           {searching && <ActivityIndicator size="small" />}
-          {place && <MaterialCommunityIcons name="check-circle" size={20} color="#2E8B57" />}
+          {place && <MaterialCommunityIcons name="check-circle" size={20} color={Palette.success} />}
         </View>
         {results.map((r) => (
           <Pressable key={`${r.latitude},${r.longitude}`} style={styles.result} onPress={() => choose(r)}>
@@ -164,7 +165,7 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
           disabled={!canSubmit}
           onPress={() => place && onSubmit({ place, startDate, endDate, occasions })}
         >
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Préparer ma valise</Text>}
+          {busy ? <ActivityIndicator color={Palette.black} /> : <Text style={styles.primaryText}>Préparer ma valise</Text>}
         </Pressable>
       </View>
     </SafeAreaView>
@@ -172,32 +173,32 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   body: { padding: 20, gap: 10, paddingBottom: 24 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  title: { fontSize: 24, fontWeight: '700' },
-  label: { fontSize: 16, fontWeight: '600', marginTop: 12 },
+  title: { fontSize: 24, fontWeight: '700', color: Palette.text },
+  label: { fontSize: 16, fontWeight: '600', marginTop: 12, color: Palette.text },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#f2f2f2', borderRadius: 12, paddingHorizontal: 12,
+    backgroundColor: Palette.surfaceRaised, borderColor: Palette.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12,
   },
-  input: { flex: 1, paddingVertical: 12, fontSize: 16 },
-  result: { backgroundColor: '#f6f6f6', borderRadius: 12, padding: 12 },
-  resultName: { fontSize: 16, fontWeight: '600' },
-  resultSub: { color: '#666', fontSize: 13, marginTop: 2 },
-  dateText: { color: '#444', fontSize: 15, textTransform: 'capitalize' },
+  input: { flex: 1, paddingVertical: 12, fontSize: 16, color: Palette.text },
+  result: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 14, padding: 12 },
+  resultName: { fontSize: 16, fontWeight: '600', color: Palette.text },
+  resultSub: { color: Palette.textSecondary, fontSize: 13, marginTop: 2 },
+  dateText: { color: Palette.textSecondary, fontSize: 15, textTransform: 'capitalize' },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stepBtn: { backgroundColor: '#eee', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  stepText: { fontWeight: '700', color: '#222' },
-  stepValue: { flex: 1, textAlign: 'center', color: '#666' },
+  stepBtn: { backgroundColor: Palette.surfaceRaised, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
+  stepText: { fontWeight: '700', color: Palette.accent },
+  stepValue: { flex: 1, textAlign: 'center', color: Palette.textSecondary },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#222' },
-  chipText: { color: '#222' },
-  chipTextActive: { color: '#fff' },
-  warn: { color: '#a15c00', marginTop: 8 },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
+  chipActive: { backgroundColor: Palette.accent },
+  chipText: { color: Palette.textSecondary },
+  chipTextActive: { color: Palette.black },
+  warn: { color: Palette.warning, marginTop: 8 },
   footer: { padding: 20 },
-  primary: { backgroundColor: '#222', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  primaryDisabled: { backgroundColor: '#bbb' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
+  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
 });

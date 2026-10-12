@@ -1,9 +1,11 @@
 import { Image } from 'expo-image';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
+import { Palette } from '@/constants/theme';
 
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
 const DURATION = 600;
@@ -33,7 +35,11 @@ export function AnimatedSplashOverlay() {
     },
   });
 
-  const image = <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />;
+  const mark = (
+    <View style={styles.mark}>
+      <MaterialCommunityIcons name="hanger" size={48} color={Palette.accent} />
+    </View>
+  );
 
   return animate ? (
     <Animated.View
@@ -44,7 +50,7 @@ export function AnimatedSplashOverlay() {
         }
       })}
       style={styles.splashOverlay}>
-      {image}
+      {mark}
     </Animated.View>
   ) : (
     <View
@@ -54,7 +60,7 @@ export function AnimatedSplashOverlay() {
         });
       }}
       style={styles.splashOverlay}>
-      {image}
+      {mark}
     </View>
   );
 }
@@ -131,6 +137,16 @@ const styles = StyleSheet.create({
     width: 76,
     height: 71,
   },
+  mark: {
+    width: 104,
+    height: 104,
+    borderRadius: 30,
+    backgroundColor: Palette.surfaceRaised,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Palette.border,
+  },
   background: {
     borderRadius: 40,
     experimental_backgroundImage: `linear-gradient(180deg, #3C9FFE, #0274DF)`,
@@ -140,7 +156,7 @@ const styles = StyleSheet.create({
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: '#208AEF',
+    backgroundColor: Palette.background,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,

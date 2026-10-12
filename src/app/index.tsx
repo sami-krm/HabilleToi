@@ -15,6 +15,7 @@ import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { useHistory } from '@/hooks/useHistory';
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { loadFavorites, saveFavorites } from '@/storage/wardrobeStorage';
+import { Palette } from '@/constants/theme';
 import type { Outfit, Style, Weather } from '@/types';
 
 const OCCASIONS: { key: Style; label: string }[] = [
@@ -174,17 +175,17 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.weatherCard}>
           <Pressable style={styles.bell} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
-            <MaterialCommunityIcons name="bell-outline" size={24} color="#222" />
+            <MaterialCommunityIcons name="bell-outline" size={24} color={Palette.text} />
           </Pressable>
           {weather.city && <Text style={styles.city}>{weather.city}</Text>}
           <Text style={styles.temp}>{Math.round(weather.temperature)}°C</Text>
           <View style={styles.weatherRow}>
             <View style={styles.weatherItem}>
-              <MaterialCommunityIcons name="weather-rainy" size={22} color="#222" />
+              <MaterialCommunityIcons name="weather-rainy" size={22} color={Palette.accent} />
               <Text style={styles.weatherLine}>{weather.precipitation} mm</Text>
             </View>
             <View style={styles.weatherItem}>
-              <MaterialCommunityIcons name="weather-windy" size={22} color="#222" />
+              <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
               <Text style={styles.weatherLine}>{Math.round(weather.windSpeed)} km/h</Text>
             </View>
           </View>
@@ -220,7 +221,7 @@ export default function HomeScreen() {
                 onPress={() => deckRef.current?.swipe('left')}
                 accessibilityLabel="Passer cette tenue"
               >
-                <MaterialCommunityIcons name="close" size={30} color="#d94343" />
+                <MaterialCommunityIcons name="close" size={30} color={Palette.danger} />
               </Pressable>
               <Pressable
                 style={[styles.roundBtnSmall, !lastAction && styles.disabled]}
@@ -228,30 +229,30 @@ export default function HomeScreen() {
                 disabled={!lastAction}
                 accessibilityLabel="Annuler le dernier swipe"
               >
-                <MaterialCommunityIcons name="undo-variant" size={22} color="#555" />
+                <MaterialCommunityIcons name="undo-variant" size={22} color={Palette.textSecondary} />
               </Pressable>
               <Pressable
                 style={[styles.roundBtn, styles.keepBtn]}
                 onPress={() => deckRef.current?.swipe('right')}
                 accessibilityLabel="Garder cette tenue en favori"
               >
-                <MaterialCommunityIcons name="heart" size={28} color="#16834a" />
+                <MaterialCommunityIcons name="heart" size={28} color={Palette.accent} />
               </Pressable>
             </View>
 
             <Pressable style={[styles.btn, styles.btnWorn]} onPress={markWorn}>
-              <MaterialCommunityIcons name="calendar-check" size={18} color="#fff" />
-              <Text style={styles.btnText}>Je porte cette tenue</Text>
+              <MaterialCommunityIcons name="calendar-check" size={18} color={Palette.white} />
+              <Text style={[styles.btnText, styles.btnWornText]}>Je porte cette tenue</Text>
             </Pressable>
           </>
         ) : (
           <View style={styles.emptyBox}>
-            <MaterialCommunityIcons name="hanger" size={36} color="#999" />
+            <MaterialCommunityIcons name="hanger" size={36} color={Palette.textSecondary} />
             <Text style={styles.emptyText}>
               Plus de tenue à proposer. Ajoute des vêtements, lave ceux qui sont sales, ou revois les tenues déjà passées.
             </Text>
             <Pressable style={styles.btn} onPress={resetDeck}>
-              <MaterialCommunityIcons name="autorenew" size={18} color="#fff" />
+              <MaterialCommunityIcons name="autorenew" size={18} color={Palette.black} />
               <Text style={styles.btnText}>Revoir les tenues</Text>
             </Pressable>
             {lastAction && (
@@ -269,44 +270,45 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   container: { padding: 20, gap: 16, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
-  error: { fontSize: 16, textAlign: 'center' },
-  weatherCard: { backgroundColor: '#e8f1ff', borderRadius: 16, padding: 20, alignItems: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, backgroundColor: Palette.background },
+  error: { fontSize: 16, textAlign: 'center', color: Palette.text },
+  weatherCard: { backgroundColor: Palette.accentSoft, borderRadius: 24, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: Palette.border },
   bell: { position: 'absolute', top: 12, right: 12, padding: 4, zIndex: 1 },
-  temp: { fontSize: 48, fontWeight: '700' },
-  city: { fontSize: 16, fontWeight: '600', color: '#444' },
+  temp: { fontSize: 50, fontWeight: '700', color: Palette.text, letterSpacing: -2 },
+  city: { fontSize: 16, fontWeight: '600', color: Palette.textSecondary },
   weatherRow: { flexDirection: 'row', gap: 24, marginTop: 8 },
   weatherItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  weatherLine: { fontSize: 16 },
+  weatherLine: { fontSize: 16, color: Palette.text },
   chips: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#222' },
-  chipText: { color: '#222' },
-  chipTextActive: { color: '#fff' },
-  title: { fontSize: 20, fontWeight: '600' },
-  swipeHint: { color: '#666', textAlign: 'center', fontSize: 13 },
+  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
+  chipActive: { backgroundColor: Palette.accent },
+  chipText: { color: Palette.textSecondary },
+  chipTextActive: { color: Palette.black, fontWeight: '600' },
+  title: { fontSize: 22, fontWeight: '700', color: Palette.text, letterSpacing: -0.4 },
+  swipeHint: { color: Palette.textSecondary, textAlign: 'center', fontSize: 13 },
   swipeActions: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 22 },
   roundBtn: {
     width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#fff', borderWidth: 2,
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3,
+    backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border,
+    shadowColor: Palette.black, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3,
   },
-  skipBtn: { borderColor: '#d94343' },
-  keepBtn: { borderColor: '#16834a' },
+  skipBtn: { borderColor: Palette.danger },
+  keepBtn: { borderColor: Palette.accent },
   roundBtnSmall: {
     width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#f1f1f1',
+    backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border,
   },
   disabled: { opacity: 0.35 },
   emptyBox: { alignItems: 'center', gap: 12, paddingVertical: 24 },
-  emptyText: { color: '#666', textAlign: 'center' },
-  link: { color: '#2F6FED', fontWeight: '600' },
+  emptyText: { color: Palette.textSecondary, textAlign: 'center' },
+  link: { color: Palette.accent, fontWeight: '600' },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 16,
   },
-  btnWorn: { backgroundColor: '#2F6FED' },
-  btnText: { color: '#fff', fontWeight: '600' },
+  btnWorn: { backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border },
+  btnText: { color: Palette.black, fontWeight: '600' },
+  btnWornText: { color: Palette.text },
 });

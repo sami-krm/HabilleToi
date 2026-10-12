@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } fr
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import type { Shop } from '@/features/onboarding/profile';
+import { Palette } from '@/constants/theme';
 import { EXTRACT_SCRIPT, type RawItem } from './importUtils';
 
 interface Props {
@@ -47,11 +48,11 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Pressable onPress={onClose} hitSlop={12}>
-          <MaterialCommunityIcons name="close" size={26} color="#222" />
+          <MaterialCommunityIcons name="close" size={26} color={Palette.text} />
         </Pressable>
         <Text style={styles.title} numberOfLines={1}>{shop.name}</Text>
         <Pressable onPress={() => setGuideOpen((o) => !o)} hitSlop={12}>
-          <MaterialCommunityIcons name={guideOpen ? 'chevron-up' : 'help-circle-outline'} size={26} color="#222" />
+          <MaterialCommunityIcons name={guideOpen ? 'chevron-up' : 'help-circle-outline'} size={26} color={Palette.text} />
         </Pressable>
       </View>
 
@@ -88,7 +89,7 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
         {status && <Text style={styles.status}>{status}</Text>}
         <View style={styles.barRow}>
           <Pressable style={[styles.btn, styles.btnGhost]} onPress={analyze}>
-            <MaterialCommunityIcons name="text-search" size={18} color="#222" />
+            <MaterialCommunityIcons name="text-search" size={18} color={Palette.text} />
             <Text style={styles.btnGhostText}>Analyser cette page</Text>
           </Pressable>
           <Pressable style={[styles.btn, foundCount === 0 && styles.btnDisabled]}
@@ -102,23 +103,23 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, gap: 12 },
-  title: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700' },
-  guide: { backgroundColor: '#e8f1ff', marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 12, gap: 4 },
-  guideTitle: { fontWeight: '700', marginBottom: 2 },
-  guideLine: { color: '#222', fontSize: 13 },
+  title: { flex: 1, textAlign: 'center', fontSize: 17, fontWeight: '700', color: Palette.text },
+  guide: { backgroundColor: Palette.accentSoft, marginHorizontal: 16, marginBottom: 8, borderRadius: 14, padding: 12, gap: 4 },
+  guideTitle: { fontWeight: '700', marginBottom: 2, color: Palette.text },
+  guideLine: { color: Palette.textSecondary, fontSize: 13 },
   web: { flex: 1 },
   loader: { position: 'absolute', top: 12, alignSelf: 'center' },
-  bar: { padding: 12, gap: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#ddd' },
+  bar: { padding: 12, gap: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Palette.border },
   barRow: { flexDirection: 'row', gap: 8 },
-  status: { color: '#444', fontSize: 13 },
+  status: { color: Palette.textSecondary, fontSize: 13 },
   btn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#222', paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingVertical: 12, borderRadius: 14,
   },
-  btnDisabled: { backgroundColor: '#bbb' },
-  btnText: { color: '#fff', fontWeight: '600' },
-  btnGhost: { backgroundColor: '#eee' },
-  btnGhostText: { color: '#222', fontWeight: '600' },
+  btnDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
+  btnText: { color: Palette.black, fontWeight: '600' },
+  btnGhost: { backgroundColor: Palette.surfaceRaised },
+  btnGhostText: { color: Palette.text, fontWeight: '600' },
 });

@@ -9,6 +9,7 @@ import {
 } from '@/services/morningReminder';
 import { DEFAULT_REMINDER, loadReminderSettings, saveReminderSettings } from './reminderSettings';
 import type { ReminderSettings } from './reminderSettings';
+import { Palette } from '@/constants/theme';
 
 const formatTime = (h: number, m: number) => `${h} h ${String(m).padStart(2, '0')}`;
 
@@ -93,7 +94,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
         <View style={styles.body}>
           <View style={styles.header}>
             <Pressable onPress={onClose} hitSlop={12}>
-              <MaterialCommunityIcons name="close" size={26} color="#222" />
+              <MaterialCommunityIcons name="close" size={26} color={Palette.text} />
             </Pressable>
             <Text style={styles.title}>Rappel du matin</Text>
           </View>
@@ -126,7 +127,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
           {draft.enabled && (
             <Pressable style={styles.testBtn} onPress={test} disabled={busy}>
-              <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#222" />
+              <MaterialCommunityIcons name="bell-ring-outline" size={18} color={Palette.accent} />
               <Text style={styles.testText}>Envoyer une notification d'essai</Text>
             </Pressable>
           )}
@@ -136,7 +137,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
         <View style={styles.footer}>
           <Pressable style={[styles.primary, busy && styles.primaryDisabled]} onPress={save} disabled={busy}>
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Enregistrer</Text>}
+            {busy ? <ActivityIndicator color={Palette.black} /> : <Text style={styles.primaryText}>Enregistrer</Text>}
           </Pressable>
         </View>
       </SafeAreaView>
@@ -145,30 +146,30 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   body: { flex: 1, padding: 20, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { fontSize: 24, fontWeight: '700' },
-  sub: { color: '#666', fontSize: 15 },
+  title: { fontSize: 24, fontWeight: '700', color: Palette.text },
+  sub: { color: Palette.textSecondary, fontSize: 15 },
   row: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#f6f6f6', borderRadius: 14, padding: 16,
+    backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 16,
   },
-  rowLabel: { fontSize: 16, fontWeight: '600' },
-  timeBox: { alignItems: 'center', gap: 12, backgroundColor: '#e8f1ff', borderRadius: 16, padding: 20 },
+  rowLabel: { fontSize: 16, fontWeight: '600', color: Palette.text },
+  timeBox: { alignItems: 'center', gap: 12, backgroundColor: Palette.accentSoft, borderRadius: 18, padding: 20 },
   disabled: { opacity: 0.4 },
-  time: { fontSize: 44, fontWeight: '700' },
+  time: { fontSize: 44, fontWeight: '700', color: Palette.text },
   stepper: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
-  stepBtn: { backgroundColor: '#fff', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
-  stepText: { fontWeight: '700', color: '#222' },
+  stepBtn: { backgroundColor: Palette.surfaceRaised, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
+  stepText: { fontWeight: '700', color: Palette.accent },
   testBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#eee', borderRadius: 12, paddingVertical: 14,
+    backgroundColor: Palette.surfaceRaised, borderRadius: 14, paddingVertical: 14,
   },
-  testText: { fontWeight: '600', color: '#222' },
-  status: { color: '#444' },
+  testText: { fontWeight: '600', color: Palette.text },
+  status: { color: Palette.textSecondary },
   footer: { padding: 20 },
-  primary: { backgroundColor: '#222', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  primaryDisabled: { backgroundColor: '#bbb' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
+  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
 });

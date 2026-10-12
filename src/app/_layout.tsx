@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -19,6 +20,7 @@ export default function TabLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
+        <StatusBar style="light" />
         {!ready ? <LoadingScreen /> : done ? <AppTabs /> : <OnboardingFlow onFinish={finish} />}
       </ThemeProvider>
     </GestureHandlerRootView>

@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, Text } from 'react-native';
 
 import { loadProfile } from '@/features/onboarding/profile';
 import ShopImport from './ShopImport';
+import { Palette } from '@/constants/theme';
 
 /** Bouton « Importer » (onglet Dressing) : ouvre l'import depuis une boutique dans une fenêtre plein écran. */
 export default function ImportFromShopButton({ onImported }: { onImported: () => void }) {
@@ -25,7 +26,7 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
   return (
     <>
       <Pressable style={styles.btn} onPress={openImport}>
-        <MaterialCommunityIcons name="storefront-outline" size={18} color="#fff" />
+        <MaterialCommunityIcons name="storefront-outline" size={18} color={Palette.black} />
         <Text style={styles.btnText}>Importer</Text>
       </Pressable>
 
@@ -40,7 +41,7 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
 const styles = StyleSheet.create({
   btn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: '#fff', fontWeight: '600' },
+  btnText: { color: Palette.black, fontWeight: '600' },
 });

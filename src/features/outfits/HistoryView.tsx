@@ -7,6 +7,7 @@ import { useHistory } from '@/hooks/useHistory';
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { dayKey, daysAgo, signatureOfIds } from '@/services/historyUtils';
 import type { WornOutfit } from '@/types';
+import { Palette } from '@/constants/theme';
 
 const REPEAT_WINDOW = 3; // une même tenue revenue en moins de 3 jours est signalée
 
@@ -104,13 +105,13 @@ export default function HistoryView() {
               </Text>
               {isRepeat(e) && (
                 <View style={styles.repeatBadge}>
-                  <MaterialCommunityIcons name="repeat" size={13} color="#a15c00" />
+                  <MaterialCommunityIcons name="repeat" size={13} color={Palette.warning} />
                   <Text style={styles.repeatText}>Répétée</Text>
                 </View>
               )}
               <View style={{ flex: 1 }} />
               <Pressable onPress={() => confirmRemove(e.id)} hitSlop={10}>
-                <MaterialCommunityIcons name="trash-can-outline" size={22} color="#8a4b2a" />
+                <MaterialCommunityIcons name="trash-can-outline" size={22} color={Palette.danger} />
               </Pressable>
             </View>
 
@@ -126,7 +127,7 @@ export default function HistoryView() {
                   // vêtement supprimé du dressing depuis
                   <View key={id} style={styles.piece}>
                     <View style={[styles.img, styles.missing]}>
-                      <MaterialCommunityIcons name="image-off-outline" size={22} color="#999" />
+                      <MaterialCommunityIcons name="image-off-outline" size={22} color={Palette.textSecondary} />
                     </View>
                     <Text style={styles.pieceLabel}>supprimé</Text>
                   </View>
@@ -141,26 +142,26 @@ export default function HistoryView() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   list: { padding: 20, gap: 8, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   header: { gap: 4, marginBottom: 8 },
-  title: { fontSize: 22, fontWeight: '700' },
-  sub: { color: '#666' },
-  empty: { color: '#666', marginTop: 24 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 12, marginBottom: 4 },
-  card: { backgroundColor: '#f6f6f6', borderRadius: 14, padding: 12, gap: 8, marginBottom: 8 },
+  title: { fontSize: 22, fontWeight: '700', color: Palette.text },
+  sub: { color: Palette.textSecondary },
+  empty: { color: Palette.textSecondary, marginTop: 24 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', marginTop: 12, marginBottom: 4, color: Palette.text },
+  card: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 18, padding: 12, gap: 8, marginBottom: 8 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  time: { color: '#666' },
+  time: { color: Palette.textSecondary },
   repeatBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#fff3df', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: Palette.accentSoft, borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3,
   },
-  repeatText: { color: '#a15c00', fontSize: 12, fontWeight: '600' },
+  repeatText: { color: Palette.warning, fontSize: 12, fontWeight: '600' },
   pieces: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   piece: { width: 64 },
-  img: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  img: { width: 64, height: 64, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   missing: { alignItems: 'center', justifyContent: 'center' },
-  pieceLabel: { fontSize: 11, textTransform: 'capitalize', marginTop: 2 },
+  pieceLabel: { fontSize: 11, textTransform: 'capitalize', marginTop: 2, color: Palette.text },
   clearBtn: { alignSelf: 'center', marginTop: 16, padding: 12 },
-  clearText: { color: '#C62828', fontWeight: '600' },
+  clearText: { color: Palette.danger, fontWeight: '600' },
 });

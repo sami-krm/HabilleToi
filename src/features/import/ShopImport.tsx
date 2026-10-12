@@ -8,6 +8,7 @@ import { loadWardrobe, saveWardrobe } from '@/storage/wardrobeStorage';
 import type { ClothingItem } from '@/types';
 import ImportResults from './ImportResults';
 import ShopBrowser from './ShopBrowser';
+import { Palette } from '@/constants/theme';
 import {
   notifyImportDone, requestNotificationPermission, storeImage, toFoundItem,
   type FoundItem, type RawItem,
@@ -103,7 +104,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
   if (phase === 'importing') {
     return (
       <SafeAreaView style={[styles.safe, styles.center]}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color={Palette.accent} />
         <Text style={styles.title}>Import en cours…</Text>
         <Text style={styles.sub}>{progress.done} / {progress.total}</Text>
         <Text style={styles.sub}>Garde l'app ouverte : une notification t'avertira à la fin.</Text>
@@ -115,7 +116,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
   if (phase === 'done') {
     return (
       <SafeAreaView style={[styles.safe, styles.center]}>
-        <MaterialCommunityIcons name="check-circle" size={72} color="#2E8B57" />
+        <MaterialCommunityIcons name="check-circle" size={72} color={Palette.success} />
         <Text style={styles.title}>
           {importedCount} vêtement{importedCount > 1 ? 's' : ''} ajouté{importedCount > 1 ? 's' : ''}
         </Text>
@@ -133,7 +134,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
     <Pressable key={s.id} style={styles.shopRow} onPress={() => openShop(s)}>
       <ShopLogo shop={s} size={44} />
       <Text style={styles.shopName}>{s.name}</Text>
-      <MaterialCommunityIcons name="chevron-right" size={24} color="#666" />
+      <MaterialCommunityIcons name="chevron-right" size={24} color={Palette.textSecondary} />
     </Pressable>
   );
 
@@ -142,7 +143,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Pressable onPress={onBack} hitSlop={12}>
-          <MaterialCommunityIcons name={standalone ? 'close' : 'arrow-left'} size={26} color="#222" />
+          <MaterialCommunityIcons name={standalone ? 'close' : 'arrow-left'} size={26} color={Palette.text} />
         </Pressable>
       </View>
 
@@ -185,22 +186,22 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   center: { alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   header: { padding: 16 },
   body: { padding: 20, gap: 12 },
-  bigTitle: { fontSize: 28, fontWeight: '700' },
-  title: { fontSize: 22, fontWeight: '700', textAlign: 'center' },
-  sub: { color: '#666', fontSize: 15, textAlign: 'left' },
-  sectionLabel: { fontSize: 15, fontWeight: '700', marginTop: 8 },
+  bigTitle: { fontSize: 28, fontWeight: '700', color: Palette.text },
+  title: { fontSize: 22, fontWeight: '700', textAlign: 'center', color: Palette.text },
+  sub: { color: Palette.textSecondary, fontSize: 15, textAlign: 'left' },
+  sectionLabel: { fontSize: 15, fontWeight: '700', marginTop: 8, color: Palette.text },
   shopRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#f6f6f6', borderRadius: 14, padding: 12,
+    backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 12,
   },
-  shopName: { flex: 1, fontSize: 17, fontWeight: '600' },
+  shopName: { flex: 1, fontSize: 17, fontWeight: '600', color: Palette.text },
   footer: { padding: 20 },
-  primary: { backgroundColor: '#222', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  ghost: { backgroundColor: '#eee' },
-  ghostText: { color: '#222' },
+  primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  ghost: { backgroundColor: Palette.surfaceRaised },
+  ghostText: { color: Palette.text },
 });

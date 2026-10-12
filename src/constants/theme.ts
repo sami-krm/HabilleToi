@@ -7,21 +7,35 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+export const Palette = {
+  background: '#0C0B11',
+  surface: '#15131B',
+  surfaceRaised: '#1D1A25',
+  surfaceSelected: '#2B2240',
+  border: '#302B3B',
+  text: '#F5F2FA',
+  textSecondary: '#A6A0B3',
+  accent: '#9B7BFF',
+  accentSoft: '#2A2140',
+  success: '#56D6A0',
+  danger: '#F17D91',
+  warning: '#F2C574',
+  white: '#FFFFFF',
+  black: '#08070B',
+} as const;
+
+// L'app conserve le thème Atelier nocturne même si le téléphone est en mode clair.
+const appColors = {
+  text: Palette.text,
+  background: Palette.background,
+  backgroundElement: Palette.surface,
+  backgroundSelected: Palette.surfaceSelected,
+  textSecondary: Palette.textSecondary,
+} as const;
+
 export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-  },
+  light: appColors,
+  dark: appColors,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

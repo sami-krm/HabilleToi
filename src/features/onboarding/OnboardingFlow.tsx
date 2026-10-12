@@ -8,6 +8,7 @@ import {
   AGE_OPTIONS, CHANNEL_OPTIONS, COUNTRIES, GENDER_OPTIONS, OCCUPATION_OPTIONS, SHOPS, saveProfile,
 } from './profile';
 import type { AgeRange, Channel, Gender, Occupation, Option, UserProfile } from './profile';
+import { Palette } from '@/constants/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 type Answers = Omit<UserProfile, 'onboardingDone'>;
@@ -28,7 +29,7 @@ const TEXTS: Record<Exclude<StepKey, 'import'>, { title: string; subtitle?: stri
 function OptionCard({
   option, selected, multi, onPress,
 }: { option: Option; selected: boolean; multi?: boolean; onPress: () => void }) {
-  const color = selected ? '#fff' : '#222';
+  const color = selected ? Palette.black : Palette.text;
   return (
     <Pressable onPress={onPress} style={[styles.card, selected && styles.cardActive]}>
       {option.icon && <MaterialCommunityIcons name={option.icon as IconName} size={22} color={color} />}
@@ -133,7 +134,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
                   <Text style={styles.tileName} numberOfLines={1}>{shop.name}</Text>
                   {selected && (
                     <View style={styles.check}>
-                      <MaterialCommunityIcons name="check" size={14} color="#fff" />
+                      <MaterialCommunityIcons name="check" size={14} color={Palette.black} />
                     </View>
                   )}
                 </Pressable>
@@ -152,7 +153,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
       <View style={styles.header}>
         {stepIndex > 0 ? (
           <Pressable onPress={back} hitSlop={12}>
-            <MaterialCommunityIcons name="arrow-left" size={26} color="#222" />
+            <MaterialCommunityIcons name="arrow-left" size={26} color={Palette.text} />
           </Pressable>
         ) : (
           <View style={{ width: 26 }} />
@@ -182,40 +183,40 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
-  barTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: '#e5e5e5', overflow: 'hidden' },
-  barFill: { height: 6, backgroundColor: '#2F6FED' },
-  skip: { color: '#666', fontWeight: '600' },
+  barTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: Palette.surfaceRaised, overflow: 'hidden' },
+  barFill: { height: 6, backgroundColor: Palette.accent },
+  skip: { color: Palette.textSecondary, fontWeight: '600' },
   body: { padding: 20, paddingTop: 28, gap: 8 },
-  title: { fontSize: 28, fontWeight: '700' },
-  subtitle: { fontSize: 15, color: '#666' },
+  title: { fontSize: 28, fontWeight: '700', color: Palette.text },
+  subtitle: { fontSize: 15, color: Palette.textSecondary },
   content: { marginTop: 16, gap: 10 },
   card: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    backgroundColor: '#f2f2f2', borderRadius: 14, padding: 16,
+    backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 16,
   },
-  cardActive: { backgroundColor: '#222' },
-  cardLabel: { flex: 1, fontSize: 16, color: '#222' },
-  cardLabelActive: { color: '#fff' },
+  cardActive: { backgroundColor: Palette.accent, borderColor: Palette.accent },
+  cardLabel: { flex: 1, fontSize: 16, color: Palette.text },
+  cardLabelActive: { color: Palette.black },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  chip: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 24, backgroundColor: '#f2f2f2' },
-  chipActive: { backgroundColor: '#222' },
-  chipText: { fontSize: 16, color: '#222' },
-  chipTextActive: { color: '#fff' },
+  chip: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 24, backgroundColor: Palette.surfaceRaised },
+  chipActive: { backgroundColor: Palette.accent },
+  chipText: { fontSize: 16, color: Palette.textSecondary },
+  chipTextActive: { color: Palette.black },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: {
     width: '31.5%', alignItems: 'center', gap: 8, paddingVertical: 14,
-    borderRadius: 14, backgroundColor: '#f6f6f6', borderWidth: 2, borderColor: 'transparent',
+    borderRadius: 14, backgroundColor: Palette.surface, borderWidth: 2, borderColor: Palette.border,
   },
-  tileActive: { borderColor: '#2F6FED', backgroundColor: '#e8f1ff' },
-  tileName: { fontSize: 13, fontWeight: '600', maxWidth: '90%' },
+  tileActive: { borderColor: Palette.accent, backgroundColor: Palette.accentSoft },
+  tileName: { fontSize: 13, fontWeight: '600', maxWidth: '90%', color: Palette.text },
   check: {
     position: 'absolute', top: 6, right: 6, width: 20, height: 20, borderRadius: 10,
-    backgroundColor: '#2F6FED', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
   footer: { padding: 20 },
-  primary: { backgroundColor: '#222', borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  primaryDisabled: { backgroundColor: '#bbb' },
-  primaryText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
+  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
 });

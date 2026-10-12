@@ -3,6 +3,7 @@ import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 import FavoritesView from '@/features/outfits/FavoritesView';
 import HistoryView from '@/features/outfits/HistoryView';
+import { Palette } from '@/constants/theme';
 
 type Segment = 'favorites' | 'history';
 
@@ -39,13 +40,13 @@ export default function OutfitsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   segmented: {
-    flexDirection: 'row', backgroundColor: '#eee', borderRadius: 12, padding: 4,
+    flexDirection: 'row', backgroundColor: Palette.surface, borderRadius: 14, padding: 4,
     marginHorizontal: 20, marginTop: 16,
   },
   segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 9 },
-  segmentActive: { backgroundColor: '#fff' },
-  segmentText: { color: '#666', fontWeight: '600' },
-  segmentTextActive: { color: '#222' },
+  segmentActive: { backgroundColor: Palette.surfaceSelected },
+  segmentText: { color: Palette.textSecondary, fontWeight: '600' },
+  segmentTextActive: { color: Palette.accent },
 });

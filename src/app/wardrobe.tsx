@@ -12,6 +12,7 @@ import { recognizeClothing } from '@/services/clothingRecognition';
 import { allColors } from '@/types';
 import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
 import ImportFromShopButton from '@/features/import/ImportFromShopButton';
+import { Palette } from '@/constants/theme';
 
 // ---------- Données d'affichage ----------
 const TYPES: { key: ClothingType; label: string }[] = [
@@ -287,11 +288,11 @@ export default function WardrobeScreen() {
         </Text>
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={() => pickImage('camera')}>
-            <MaterialCommunityIcons name="camera-outline" size={18} color="#fff" />
+            <MaterialCommunityIcons name="camera-outline" size={18} color={Palette.black} />
             <Text style={styles.btnText}>Photo</Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => pickImage('library')}>
-            <MaterialCommunityIcons name="image-outline" size={18} color="#fff" />
+            <MaterialCommunityIcons name="image-outline" size={18} color={Palette.black} />
             <Text style={styles.btnText}>Galerie</Text>
           </Pressable>
           <ImportFromShopButton onImported={reload} />
@@ -319,14 +320,14 @@ export default function WardrobeScreen() {
       {/* Barre de filtres */}
       <View style={styles.filterBar}>
         <Pressable style={styles.filterBtn} onPress={() => setShowFilters((s) => !s)}>
-          <MaterialCommunityIcons name="filter-variant" size={18} color="#222" />
+          <MaterialCommunityIcons name="filter-variant" size={18} color={Palette.text} />
           <Text style={styles.filterBtnText}>Filtres</Text>
           {activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
             </View>
           )}
-          <MaterialCommunityIcons name={showFilters ? 'chevron-up' : 'chevron-down'} size={18} color="#222" />
+          <MaterialCommunityIcons name={showFilters ? 'chevron-up' : 'chevron-down'} size={18} color={Palette.text} />
         </Pressable>
         {(activeFilterCount > 0 || category !== 'all') && (
           <Pressable onPress={resetFilters} hitSlop={8}>
@@ -403,7 +404,7 @@ export default function WardrobeScreen() {
               <MaterialCommunityIcons
                 name={item.clean ? 'check-circle-outline' : 'washing-machine'}
                 size={16}
-                color="#fff"
+                color={Palette.white}
               />
               <Text style={styles.cleanText}>{item.clean ? 'Propre' : 'Sale · marquer lavé'}</Text>
             </Pressable>
@@ -428,7 +429,7 @@ export default function WardrobeScreen() {
             )}
             {aiApplied && !analyzing && (
               <View style={styles.banner}>
-                <MaterialCommunityIcons name="creation" size={18} color="#2F6FED" />
+                <MaterialCommunityIcons name="creation" size={18} color={Palette.accent} />
                 <Text style={styles.bannerText}>Suggestion automatique : vérifie et corrige si besoin.</Text>
               </View>
             )}
@@ -489,7 +490,7 @@ export default function WardrobeScreen() {
             {/* Suppression : uniquement en modification */}
             {editingId && (
               <Pressable style={styles.deleteBtn} onPress={confirmDelete}>
-                <MaterialCommunityIcons name="trash-can-outline" size={18} color="#C62828" />
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color={Palette.danger} />
                 <Text style={styles.deleteText}>Supprimer ce vêtement</Text>
               </Pressable>
             )}
@@ -501,24 +502,24 @@ export default function WardrobeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   top: { paddingHorizontal: 20, paddingTop: 20, gap: 12 },
-  title: { fontSize: 22, fontWeight: '700' },
+  title: { fontSize: 22, fontWeight: '700', color: Palette.text },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  link: { color: '#2F6FED', fontWeight: '600' },
+  link: { color: Palette.accent, fontWeight: '600' },
 
   // Onglets de catégories
   tabsScroll: { flexGrow: 0, flexShrink: 0, height: 44, marginTop: 12 },
   tabs: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#eee',
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised,
   },
-  tabActive: { backgroundColor: '#222' },
-  tabText: { color: '#222', fontWeight: '600' },
-  tabTextActive: { color: '#fff' },
-  tabCount: { color: '#666', fontSize: 12, fontWeight: '600' },
-  tabCountActive: { color: '#ccc' },
+  tabActive: { backgroundColor: Palette.surfaceSelected },
+  tabText: { color: Palette.textSecondary, fontWeight: '600' },
+  tabTextActive: { color: Palette.accent },
+  tabCount: { color: Palette.textSecondary, fontSize: 12, fontWeight: '600' },
+  tabCountActive: { color: Palette.accent },
 
   // Filtres
   filterBar: {
@@ -527,71 +528,71 @@ const styles = StyleSheet.create({
   },
   filterBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f2f2f2',
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: Palette.surfaceRaised,
   },
-  filterBtnText: { fontWeight: '600', color: '#222' },
+  filterBtnText: { fontWeight: '600', color: Palette.text },
   filterBadge: {
     minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
-    backgroundColor: '#2F6FED', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
-  filterBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
-  panel: { maxHeight: 280, marginHorizontal: 20, marginBottom: 8, backgroundColor: '#f6f6f6', borderRadius: 14 },
+  filterBadgeText: { color: Palette.black, fontSize: 11, fontWeight: '700' },
+  panel: { maxHeight: 280, marginHorizontal: 20, marginBottom: 8, backgroundColor: Palette.surface, borderRadius: 16, borderWidth: 1, borderColor: Palette.border },
   panelContent: { padding: 14, gap: 10 },
-  panelLabel: { fontWeight: '600', fontSize: 14, marginTop: 4 },
+  panelLabel: { fontWeight: '600', fontSize: 14, marginTop: 4, color: Palette.text },
 
   // Liste
   list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   row: { gap: 12 },
-  empty: { color: '#666' },
+  empty: { color: Palette.textSecondary },
   emptyBox: { gap: 12, marginTop: 24 },
   btn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: '#fff', fontWeight: '600' },
-  btnGhost: { backgroundColor: '#eee' },
-  btnGhostText: { color: '#222', fontWeight: '600' },
-  card: { flex: 1, backgroundColor: '#f6f6f6', borderRadius: 14, padding: 8, gap: 6 },
+  btnText: { color: Palette.black, fontWeight: '600' },
+  btnGhost: { backgroundColor: Palette.surfaceRaised },
+  btnGhostText: { color: Palette.text, fontWeight: '600' },
+  card: { flex: 1, backgroundColor: Palette.surface, borderRadius: 18, padding: 8, gap: 6, borderWidth: 1, borderColor: Palette.border },
   cardDirty: { opacity: 0.6 },
-  cardImg: { width: '100%', aspectRatio: 1, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  cardImg: { width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   cardInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: '#ccc' },
-  cardLabel: { flexShrink: 1, marginLeft: 2 },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  cardLabel: { flexShrink: 1, marginLeft: 2, color: Palette.text },
   cleanBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8 },
-  cleanOk: { backgroundColor: '#2E8B57' },
-  cleanKo: { backgroundColor: '#8a4b2a' },
-  cleanText: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  cleanOk: { backgroundColor: '#247A5C' },
+  cleanKo: { backgroundColor: '#77512F' },
+  cleanText: { color: Palette.white, fontSize: 12, fontWeight: '600' },
 
   // Formulaire
   form: { padding: 20, gap: 12, paddingBottom: 40 },
-  formTitle: { fontSize: 22, fontWeight: '700' },
-  preview: { width: '100%', aspectRatio: 1, borderRadius: 16, backgroundColor: '#eee' },
+  formTitle: { fontSize: 22, fontWeight: '700', color: Palette.text },
+  preview: { width: '100%', aspectRatio: 1, borderRadius: 18, backgroundColor: Palette.surfaceRaised },
   banner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#e8f1ff', borderRadius: 12, padding: 12,
+    backgroundColor: Palette.accentSoft, borderRadius: 14, padding: 12,
   },
-  bannerText: { flexShrink: 1, color: '#222' },
-  note: { color: '#a15c00' },
-  hintInline: { color: '#666', fontSize: 13, marginTop: -6 },
-  label: { fontSize: 16, fontWeight: '600', marginTop: 8 },
+  bannerText: { flexShrink: 1, color: Palette.text },
+  note: { color: Palette.warning },
+  hintInline: { color: Palette.textSecondary, fontSize: 13, marginTop: -6 },
+  label: { fontSize: 16, fontWeight: '600', marginTop: 8, color: Palette.text },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#eee' },
-  chipActive: { backgroundColor: '#222' },
-  chipText: { color: '#222' },
-  chipTextActive: { color: '#fff' },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
+  chipActive: { backgroundColor: Palette.accent },
+  chipText: { color: Palette.textSecondary },
+  chipTextActive: { color: Palette.black },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   swatchWrap: { alignItems: 'center', width: 56 },
-  swatch: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: '#ccc' },
-  swatchActive: { borderWidth: 3, borderColor: '#2F6FED' },
-  swatchLabel: { fontSize: 11, marginTop: 2 },
+  swatch: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: Palette.border },
+  swatchActive: { borderWidth: 3, borderColor: Palette.accent },
+  swatchLabel: { fontSize: 11, marginTop: 2, color: Palette.textSecondary },
   badge: {
     position: 'absolute', top: -4, right: -6, width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#2F6FED', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  badgeText: { color: Palette.black, fontSize: 11, fontWeight: '700' },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    marginTop: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: '#C62828',
+    marginTop: 16, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: Palette.danger,
   },
-  deleteText: { color: '#C62828', fontWeight: '600' },
+  deleteText: { color: Palette.danger, fontWeight: '600' },
 });

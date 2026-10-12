@@ -7,6 +7,7 @@ import { formatDay, formatShort } from '@/services/tripDates';
 import { allColors } from '@/types';
 import type { ClothingItem, ColorName } from '@/types';
 import type { DayWeather, SavedTrip } from './tripTypes';
+import { Palette } from '@/constants/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -53,7 +54,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.header}>
           <Pressable onPress={onBack} hitSlop={12}>
-            <MaterialCommunityIcons name="arrow-left" size={26} color="#222" />
+            <MaterialCommunityIcons name="arrow-left" size={26} color={Palette.text} />
           </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.title} numberOfLines={1}>{trip.place.name}</Text>
@@ -73,7 +74,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
             {days.map((d) => (
               <View key={d.date} style={styles.dayChip}>
                 <Text style={styles.dayChipDate}>{formatDay(d.date)}</Text>
-                <MaterialCommunityIcons name={weatherIcon(d)} size={22} color="#222" />
+                <MaterialCommunityIcons name={weatherIcon(d)} size={22} color={Palette.accent} />
                 <Text style={styles.dayChipTemp}>{Math.round(d.tMax)}°</Text>
                 <Text style={styles.dayChipMin}>{Math.round(d.tMin)}°</Text>
               </View>
@@ -83,7 +84,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
 
         {trip.weather.estimated && (
           <View style={styles.banner}>
-            <MaterialCommunityIcons name="information-outline" size={18} color="#a15c00" />
+            <MaterialCommunityIcons name="information-outline" size={18} color={Palette.warning} />
             <Text style={styles.bannerText}>
               Ces dates sont trop lointaines pour une prévision : la météo est estimée d'après les mêmes jours l'an dernier.
             </Text>
@@ -92,7 +93,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
 
         {trip.notes.map((n) => (
           <View key={n} style={styles.banner}>
-            <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#a15c00" />
+            <MaterialCommunityIcons name="alert-circle-outline" size={18} color={Palette.warning} />
             <Text style={styles.bannerText}>{n}</Text>
           </View>
         ))}
@@ -133,7 +134,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
                     <MaterialCommunityIcons
                       name={packed ? 'checkbox-marked-circle' : 'checkbox-blank-circle-outline'}
                       size={26}
-                      color={packed ? '#2E8B57' : '#999'}
+                      color={packed ? Palette.success : Palette.textSecondary}
                     />
                   </Pressable>
                 );
@@ -153,7 +154,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
                 <Text style={styles.dayCardTitle}>{formatShort(d.date)}</Text>
                 {w && (
                   <View style={styles.dayCardWeather}>
-                    <MaterialCommunityIcons name={weatherIcon(w)} size={18} color="#444" />
+                    <MaterialCommunityIcons name={weatherIcon(w)} size={18} color={Palette.accent} />
                     <Text style={styles.sub}>{Math.round(w.tMin)}° / {Math.round(w.tMax)}°</Text>
                   </View>
                 )}
@@ -169,12 +170,12 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
 
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={onRegenerate}>
-            <MaterialCommunityIcons name="autorenew" size={18} color="#fff" />
+            <MaterialCommunityIcons name="autorenew" size={18} color={Palette.black} />
             <Text style={styles.btnText}>Autre sélection</Text>
           </Pressable>
           <Pressable style={[styles.btn, styles.btnGhost]} onPress={confirmDelete}>
-            <MaterialCommunityIcons name="trash-can-outline" size={18} color="#C62828" />
-            <Text style={[styles.btnText, { color: '#C62828' }]}>Supprimer</Text>
+            <MaterialCommunityIcons name="trash-can-outline" size={18} color={Palette.danger} />
+            <Text style={[styles.btnText, { color: Palette.danger }]}>Supprimer</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -183,46 +184,46 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#fff' },
+  safe: { flex: 1, backgroundColor: Palette.background },
   body: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { fontSize: 24, fontWeight: '700' },
-  sub: { color: '#666', textTransform: 'capitalize' },
-  weatherCard: { backgroundColor: '#e8f1ff', borderRadius: 16, padding: 16, gap: 4 },
-  range: { fontSize: 32, fontWeight: '700' },
-  rainText: { color: '#444' },
+  title: { fontSize: 24, fontWeight: '700', color: Palette.text },
+  sub: { color: Palette.textSecondary, textTransform: 'capitalize' },
+  weatherCard: { backgroundColor: Palette.accentSoft, borderRadius: 20, padding: 16, gap: 4, borderWidth: 1, borderColor: Palette.border },
+  range: { fontSize: 32, fontWeight: '700', color: Palette.text },
+  rainText: { color: Palette.textSecondary },
   dayStrip: { gap: 8, paddingTop: 10 },
-  dayChip: { alignItems: 'center', gap: 2, backgroundColor: '#fff', borderRadius: 12, paddingVertical: 8, paddingHorizontal: 10, minWidth: 58 },
-  dayChipDate: { fontSize: 11, color: '#666' },
-  dayChipTemp: { fontWeight: '700' },
-  dayChipMin: { fontSize: 12, color: '#888' },
-  banner: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: '#fff3df', borderRadius: 12, padding: 12 },
-  bannerText: { flex: 1, color: '#7a4600', fontSize: 13 },
+  dayChip: { alignItems: 'center', gap: 2, backgroundColor: Palette.surfaceRaised, borderRadius: 14, paddingVertical: 8, paddingHorizontal: 10, minWidth: 58 },
+  dayChipDate: { fontSize: 11, color: Palette.textSecondary },
+  dayChipTemp: { fontWeight: '700', color: Palette.text },
+  dayChipMin: { fontSize: 12, color: Palette.textSecondary },
+  banner: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', backgroundColor: Palette.accentSoft, borderRadius: 14, padding: 12 },
+  bannerText: { flex: 1, color: Palette.warning, fontSize: 13 },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 8 },
-  sectionTitle: { fontSize: 20, fontWeight: '600', marginTop: 8 },
-  barTrack: { height: 6, borderRadius: 3, backgroundColor: '#e5e5e5', overflow: 'hidden' },
-  barFill: { height: 6, backgroundColor: '#2E8B57' },
+  sectionTitle: { fontSize: 20, fontWeight: '600', marginTop: 8, color: Palette.text },
+  barTrack: { height: 6, borderRadius: 3, backgroundColor: Palette.surfaceRaised, overflow: 'hidden' },
+  barFill: { height: 6, backgroundColor: Palette.accent },
   group: { gap: 8, marginTop: 4 },
-  groupTitle: { fontSize: 15, fontWeight: '700', color: '#444' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f6f6f6', borderRadius: 14, padding: 8 },
+  groupTitle: { fontSize: 15, fontWeight: '700', color: Palette.textSecondary },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 8 },
   rowPacked: { opacity: 0.55 },
-  img: { width: 60, height: 60, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  img: { width: 60, height: 60, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   rowInfo: { flex: 1, gap: 4 },
-  rowName: { fontSize: 16, fontWeight: '600' },
+  rowName: { fontSize: 16, fontWeight: '600', color: Palette.text },
   dots: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: '#ccc' },
-  dirty: { color: '#a15c00', fontSize: 12, marginLeft: 4 },
-  dayCard: { backgroundColor: '#f6f6f6', borderRadius: 14, padding: 12, gap: 8 },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  dirty: { color: Palette.warning, fontSize: 12, marginLeft: 4 },
+  dayCard: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 12, gap: 8 },
   dayCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  dayCardTitle: { fontWeight: '700', textTransform: 'capitalize' },
+  dayCardTitle: { fontWeight: '700', textTransform: 'capitalize', color: Palette.text },
   dayCardWeather: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pieces: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  pieceImg: { width: 56, height: 56, borderRadius: 10, backgroundColor: '#e5e5e5' },
+  pieceImg: { width: 56, height: 56, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 12 },
   btn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnGhost: { backgroundColor: '#eee' },
-  btnText: { color: '#fff', fontWeight: '600' },
+  btnGhost: { backgroundColor: Palette.surfaceRaised },
+  btnText: { color: Palette.black, fontWeight: '600' },
 });

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import type { Shop } from './profile';
+import { Palette } from '@/constants/theme';
 
 /** Logo récupéré via le favicon du site ; initiales si le chargement échoue. */
 export default function ShopLogo({ shop, size = 56 }: { shop: Shop; size?: number }) {
@@ -27,6 +28,6 @@ export default function ShopLogo({ shop, size = 56 }: { shop: Shop; size?: numbe
 }
 
 const styles = StyleSheet.create({
-  fallback: { backgroundColor: '#e8f1ff', alignItems: 'center', justifyContent: 'center' },
-  initials: { fontWeight: '700', color: '#2F6FED' },
+  fallback: { backgroundColor: Palette.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  initials: { fontWeight: '700', color: Palette.accent },
 });

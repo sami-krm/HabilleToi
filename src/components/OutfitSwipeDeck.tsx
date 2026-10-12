@@ -12,6 +12,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 
 import { allColors } from '@/types';
 import type { ColorName, Outfit } from '@/types';
+import { Palette } from '@/constants/theme';
 
 export type SwipeDirection = 'left' | 'right';
 
@@ -161,16 +162,16 @@ function SwipeCard({ outfit, hasNext, onSwipe, ref }: Props) {
 
       <GestureDetector gesture={pan}>
         <Animated.View style={[styles.card, cardStyle]}>
-          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: '#16834a' }, keepTint]} />
-          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: '#d94343' }, skipTint]} />
+          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: Palette.accent }, keepTint]} />
+          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: Palette.danger }, skipTint]} />
 
           <Animated.View pointerEvents="none" style={[styles.badge, styles.keepBadge, keepBadge]}>
-            <MaterialCommunityIcons name="heart" size={20} color="#16834a" />
-            <Text style={[styles.badgeText, { color: '#16834a' }]}>GARDER</Text>
+            <MaterialCommunityIcons name="heart" size={20} color={Palette.accent} />
+            <Text style={[styles.badgeText, { color: Palette.accent }]}>GARDER</Text>
           </Animated.View>
           <Animated.View pointerEvents="none" style={[styles.badge, styles.skipBadge, skipBadge]}>
-            <MaterialCommunityIcons name="close" size={20} color="#d94343" />
-            <Text style={[styles.badgeText, { color: '#d94343' }]}>PASSER</Text>
+            <MaterialCommunityIcons name="close" size={20} color={Palette.danger} />
+            <Text style={[styles.badgeText, { color: Palette.danger }]}>PASSER</Text>
           </Animated.View>
 
           <View style={styles.grid}>
@@ -206,28 +207,28 @@ const styles = StyleSheet.create({
   wrapper: { marginBottom: BEHIND_OFFSET + 4 },
   plate: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: '#ececec', borderRadius: 22,
+    backgroundColor: Palette.surface, borderRadius: 24,
   },
   card: {
-    backgroundColor: '#fff', borderRadius: 22, padding: 12, gap: 10,
-    borderWidth: 1, borderColor: '#e6e6e6', overflow: 'hidden',
-    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
+    backgroundColor: Palette.surfaceRaised, borderRadius: 24, padding: 12, gap: 10,
+    borderWidth: 1, borderColor: Palette.border, overflow: 'hidden',
+    shadowColor: Palette.black, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
   tint: { ...StyleSheet.absoluteFill, zIndex: 1 },
   badge: {
     position: 'absolute', top: 18, zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 4,
-    borderWidth: 2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: '#fff',
+    borderWidth: 2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: Palette.surface,
   },
-  keepBadge: { left: 18, borderColor: '#16834a', transform: [{ rotate: '-10deg' }] },
-  skipBadge: { right: 18, borderColor: '#d94343', transform: [{ rotate: '10deg' }] },
+  keepBadge: { left: 18, borderColor: Palette.accent, transform: [{ rotate: '-10deg' }] },
+  skipBadge: { right: 18, borderColor: Palette.danger, transform: [{ rotate: '10deg' }] },
   badgeText: { fontSize: 15, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   piece: { width: '48%' },
-  pieceImg: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#f2f2f2' },
+  pieceImg: { width: '100%', aspectRatio: 1, borderRadius: 16, backgroundColor: Palette.surface },
   pieceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  pieceLabel: { fontWeight: '600', flexShrink: 1 },
+  pieceLabel: { fontWeight: '600', flexShrink: 1, color: Palette.text },
   dots: { flexDirection: 'row', gap: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: '#d0d0d0' },
-  note: { color: '#a15c00' },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  note: { color: Palette.warning },
 });
