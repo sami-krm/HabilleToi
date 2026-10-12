@@ -1,22 +1,18 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, useWindowDimensions, View,
+  ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, withTiming,
-} from 'react-native-reanimated';
-import type { SharedValue } from 'react-native-reanimated';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
+import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
+import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
 import { getCurrentWeather, WeatherError } from '@/services/weatherService';
 import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { useHistory } from '@/hooks/useHistory';
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { loadFavorites, saveFavorites } from '@/storage/wardrobeStorage';
-import { allColors } from '@/types';
 import type { Outfit, Style, Weather } from '@/types';
 
 const OCCASIONS: { key: Style; label: string }[] = [
@@ -26,50 +22,12 @@ const OCCASIONS: { key: Style; label: string }[] = [
   { key: 'soiree', label: 'Soirée' },
 ];
 
-function createPanGesture(
-  translateX: SharedValue<number>,
-  screenWidth: number,
-  onSwipe: (direction: 'left' | 'right') => void,
-) {
-  return Gesture.Pan()
-    .activeOffsetX([-12, 12])
-    .failOffsetY([-12, 12])
-    .onUpdate((event) => {
-      translateX.value = event.translationX;
-    })
-    .onEnd((event) => {
-      const shouldSwipe = Math.abs(event.translationX) > screenWidth * 0.25
-        || Math.abs(event.velocityX) > 900;
-      if (!shouldSwipe) {
-        translateX.value = withSpring(0);
-        return;
-      }
+const DECK_SIZE = 2; // la tenue du dessus + celle qui attend derrière
 
-      const direction: 'left' | 'right' = Math.abs(event.translationX) > screenWidth * 0.25
-        ? event.translationX > 0 ? 'right' : 'left'
-        : event.velocityX > 0 ? 'right' : 'left';
-      const destination = direction === 'right' ? screenWidth * 1.2 : -screenWidth * 1.2;
-      translateX.value = withTiming(destination, { duration: 180 }, (finished) => {
-        if (finished) scheduleOnRN(onSwipe, direction);
-      });
-    });
-}
-
-function returnCardToCenter(translateX: SharedValue<number>) {
-  'worklet';
-  translateX.value = withSpring(0);
-}
-
-function animateNextCard(
-  translateX: SharedValue<number>,
-  screenWidth: number,
-  direction: 'left' | 'right',
-) {
-  'worklet';
-  const start = direction === 'left' ? screenWidth * 0.15 : -screenWidth * 0.15;
-  translateX.value = withTiming(start, { duration: 0 }, (finished) => {
-    if (finished) translateX.value = withSpring(0);
-  });
+interface LastAction {
+  outfit: Outfit;
+  direction: SwipeDirection;
+  favoriteId?: string;
 }
 
 export default function HomeScreen() {
@@ -77,15 +35,16 @@ export default function HomeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [occasion, setOccasion] = useState<Style>('casual');
-  const [outfit, setOutfit] = useState<Outfit | null>(null);
-  const [seen, setSeen] = useState<Set<string>>(() => new Set());
-  const { width: screenWidth } = useWindowDimensions();
-  const translateX = useSharedValue(0);
+  const [queue, setQueue] = useState<Outfit[]>([]);
+  const [lastAction, setLastAction] = useState<LastAction | null>(null);
+  const seenRef = useRef<Set<string>>(new Set());
+  const deckRef = useRef<SwipeDeckHandle>(null);
 
   const { items, reload, setClean } = useWardrobe();
   const { entries: history, reload: reloadHistory, addWorn } = useHistory();
 
-  // Recharge le dressing et l'historique à chaque retour sur l'onglet
+  const outfit = queue[0] ?? null;
+
   useFocusEffect(
     useCallback(() => {
       reload();
@@ -93,7 +52,6 @@ export default function HomeScreen() {
     }, [reload, reloadHistory]),
   );
 
-  // Météo à l'ouverture
   const loadWeather = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -107,100 +65,75 @@ export default function HomeScreen() {
   }, []);
   useEffect(() => { loadWeather(); }, [loadWeather]);
 
-  // Nouvelle tenue quand la météo, l'occasion, le dressing ou l'historique changent
-  useEffect(() => {
-    if (!weather) return;
-    const nextSeen = new Set<string>();
-    const next = generateOutfit(items, weather, occasion, new Set(), history);
-    if (next) nextSeen.add(outfitSignature(next.items));
-    setSeen(nextSeen);
-    setOutfit(next);
-  }, [weather, occasion, items, history]);
-
-  const getNextOutfit = useCallback(() => {
+  /** Tire une nouvelle tenue jamais vue dans cette série. */
+  const draw = useCallback((): Outfit | null => {
     if (!weather) return null;
-    const next = generateOutfit(items, weather, occasion, seen, history);
-    if (!next) {
-      return null;
-    }
-    setSeen((current) => new Set([...current, outfitSignature(next.items)]));
+    const next = generateOutfit(items, weather, occasion, seenRef.current, history);
+    if (next) seenRef.current.add(outfitSignature(next.items));
     return next;
-  }, [history, items, occasion, seen, weather]);
+  }, [history, items, occasion, weather]);
 
-  const regenerate = () => {
-    const next = getNextOutfit();
-    if (!next) {
-      Alert.alert('Plus de combinaisons', 'Ajoute des vêtements ou lave ceux qui sont sales.');
-      return;
+  /** Repart de zéro : nouvelle série de tenues. */
+  const resetDeck = useCallback(() => {
+    seenRef.current = new Set();
+    const fresh: Outfit[] = [];
+    while (fresh.length < DECK_SIZE) {
+      const next = draw();
+      if (!next) break;
+      fresh.push(next);
     }
-    setOutfit(next);
-  };
+    setQueue(fresh);
+    setLastAction(null);
+  }, [draw]);
 
-  const persistFavorite = useCallback(async (currentOutfit: Outfit) => {
+  // Nouvelle série quand la météo, l'occasion, le dressing ou l'historique changent
+  useEffect(() => { resetDeck(); }, [resetDeck]);
+
+  // ---------- Favoris ----------
+  const addFavorite = useCallback(async (current: Outfit): Promise<string> => {
+    const id = String(Date.now());
     const favs = await loadFavorites();
-    await saveFavorites([
-      ...favs,
-      {
-        id: String(Date.now()),
-        itemIds: currentOutfit.items.map((i) => i.id),
-        createdAt: Date.now(),
-      },
-    ]);
+    await saveFavorites([...favs, { id, itemIds: current.items.map((i) => i.id), createdAt: Date.now() }]);
+    return id;
   }, []);
 
-  const handleSwipe = useCallback(async (direction: 'left' | 'right') => {
-    if (direction === 'right' && outfit) {
-      try {
-        await persistFavorite(outfit);
-      } catch {
-        Alert.alert('Erreur', "Impossible d'ajouter cette tenue aux favoris.");
-        scheduleOnUI(returnCardToCenter, translateX);
-        return;
-      }
+  const removeFavorite = useCallback(async (id: string) => {
+    const favs = await loadFavorites();
+    await saveFavorites(favs.filter((f) => f.id !== id));
+  }, []);
+
+  // ---------- Swipe ----------
+  const handleSwipe = useCallback((direction: SwipeDirection) => {
+    const current = queue[0];
+    if (!current) return;
+
+    // L'interface avance tout de suite ; l'enregistrement se fait en arrière-plan
+    const extra = draw();
+    setQueue([...queue.slice(1), ...(extra ? [extra] : [])]);
+    setLastAction({ outfit: current, direction });
+
+    if (direction === 'right') {
+      addFavorite(current)
+        .then((favoriteId) => setLastAction((a) => (a?.outfit === current ? { ...a, favoriteId } : a)))
+        .catch(() => Alert.alert('Erreur', "Impossible d'ajouter cette tenue aux favoris."));
     }
+  }, [addFavorite, draw, queue]);
 
-    const next = getNextOutfit();
-    if (!next) {
-      Alert.alert('Plus de combinaisons', 'Ajoute des vêtements ou lave ceux qui sont sales.');
-      scheduleOnUI(returnCardToCenter, translateX);
-      return;
+  const undo = useCallback(() => {
+    if (!lastAction) return;
+    Haptics.selectionAsync().catch(() => {});
+    const restored = [lastAction.outfit, ...queue];
+    // On ne garde que DECK_SIZE cartes ; celle qui sort pourra revenir plus tard
+    while (restored.length > DECK_SIZE) {
+      const dropped = restored.pop();
+      if (dropped) seenRef.current.delete(outfitSignature(dropped.items));
     }
+    setQueue(restored);
+    if (lastAction.favoriteId) removeFavorite(lastAction.favoriteId).catch(() => {});
+    setLastAction(null);
+  }, [lastAction, queue, removeFavorite]);
 
-    setOutfit(next);
-    scheduleOnUI(animateNextCard, translateX, screenWidth, direction);
-  }, [getNextOutfit, outfit, persistFavorite, screenWidth, translateX]);
-
-  const saveFavorite = async () => {
-    if (!outfit) return;
-    await persistFavorite(outfit);
-    Alert.alert('Ajoutée aux favoris');
-  };
-
-  const swipeStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      {
-        rotateZ: `${interpolate(
-          translateX.value,
-          [-screenWidth, screenWidth],
-          [-12, 12],
-          Extrapolation.CLAMP,
-        )}deg`,
-      },
-    ],
-  }));
-  const keepBadgeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, screenWidth * 0.25], [0, 1], Extrapolation.CLAMP),
-  }));
-  const skipBadgeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [-screenWidth * 0.25, 0], [1, 0], Extrapolation.CLAMP),
-  }));
-  const panGesture = useMemo(
-    () => createPanGesture(translateX, screenWidth, handleSwipe),
-    [handleSwipe, screenWidth, translateX],
-  );
-
-  // Tenue portée : enregistre dans l'historique, puis demande si les vêtements vont au sale
+  // Tenue portée : historique, puis on demande si les vêtements vont au sale
   const markWorn = () => {
     if (!outfit) return;
     const ids = outfit.items.map((i) => i.id);
@@ -233,7 +166,6 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Météo */}
         <View style={styles.weatherCard}>
           {weather.city && <Text style={styles.city}>{weather.city}</Text>}
           <Text style={styles.temp}>{Math.round(weather.temperature)}°C</Text>
@@ -249,7 +181,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Occasion */}
         <View style={styles.chips}>
           {OCCASIONS.map((o) => (
             <Pressable
@@ -262,52 +193,64 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Tenue du jour */}
         <Text style={styles.title}>Ta tenue du jour</Text>
+
         {outfit ? (
           <>
-            <GestureDetector gesture={panGesture}>
-              <Animated.View style={[styles.swipeCard, swipeStyle]}>
-                <Animated.View style={[styles.swipeBadge, styles.keepBadge, keepBadgeStyle]} pointerEvents="none">
-                  <MaterialCommunityIcons name="heart" size={20} color="#16834a" />
-                  <Text style={[styles.swipeBadgeText, styles.keepBadgeText]}>GARDER</Text>
-                </Animated.View>
-                <Animated.View style={[styles.swipeBadge, styles.skipBadge, skipBadgeStyle]} pointerEvents="none">
-                  <MaterialCommunityIcons name="close" size={20} color="#d94343" />
-                  <Text style={[styles.swipeBadgeText, styles.skipBadgeText]}>PASSER</Text>
-                </Animated.View>
-                <View style={styles.grid}>
-                  {outfit.items.map((item) => (
-                    <View key={item.id} style={styles.piece}>
-                      <Image source={{ uri: item.uri }} style={styles.pieceImg} />
-                      <Text style={styles.pieceLabel}>{item.type} · {allColors(item).join(' / ')}</Text>
-                    </View>
-                  ))}
-                </View>
-                {outfit.notes.map((n) => <Text key={n} style={styles.note}>{n}</Text>)}
-              </Animated.View>
-            </GestureDetector>
+            <OutfitSwipeDeck
+              ref={deckRef}
+              outfit={outfit}
+              hasNext={queue.length > 1}
+              onSwipe={handleSwipe}
+            />
             <Text style={styles.swipeHint}>Glisse à droite pour garder · à gauche pour passer</Text>
 
-            <View style={styles.actions}>
-              <Pressable style={styles.btn} onPress={regenerate}>
-                <MaterialCommunityIcons name="autorenew" size={18} color="#fff" />
-                <Text style={styles.btnText}>Autre tenue</Text>
+            <View style={styles.swipeActions}>
+              <Pressable
+                style={[styles.roundBtn, styles.skipBtn]}
+                onPress={() => deckRef.current?.swipe('left')}
+                accessibilityLabel="Passer cette tenue"
+              >
+                <MaterialCommunityIcons name="close" size={30} color="#d94343" />
               </Pressable>
-              <Pressable style={styles.btn} onPress={saveFavorite}>
-                <MaterialCommunityIcons name="star-outline" size={18} color="#fff" />
-                <Text style={styles.btnText}>Favori</Text>
+              <Pressable
+                style={[styles.roundBtnSmall, !lastAction && styles.disabled]}
+                onPress={undo}
+                disabled={!lastAction}
+                accessibilityLabel="Annuler le dernier swipe"
+              >
+                <MaterialCommunityIcons name="undo-variant" size={22} color="#555" />
               </Pressable>
-              <Pressable style={[styles.btn, styles.btnWorn]} onPress={markWorn}>
-                <MaterialCommunityIcons name="calendar-check" size={18} color="#fff" />
-                <Text style={styles.btnText}>Portée</Text>
+              <Pressable
+                style={[styles.roundBtn, styles.keepBtn]}
+                onPress={() => deckRef.current?.swipe('right')}
+                accessibilityLabel="Garder cette tenue en favori"
+              >
+                <MaterialCommunityIcons name="heart" size={28} color="#16834a" />
               </Pressable>
             </View>
+
+            <Pressable style={[styles.btn, styles.btnWorn]} onPress={markWorn}>
+              <MaterialCommunityIcons name="calendar-check" size={18} color="#fff" />
+              <Text style={styles.btnText}>Je porte cette tenue</Text>
+            </Pressable>
           </>
         ) : (
-          <Text style={styles.note}>
-            Pas assez de vêtements propres pour composer une tenue. Ajoute des pièces dans l'onglet Dressing.
-          </Text>
+          <View style={styles.emptyBox}>
+            <MaterialCommunityIcons name="hanger" size={36} color="#999" />
+            <Text style={styles.emptyText}>
+              Plus de tenue à proposer. Ajoute des vêtements, lave ceux qui sont sales, ou revois les tenues déjà passées.
+            </Text>
+            <Pressable style={styles.btn} onPress={resetDeck}>
+              <MaterialCommunityIcons name="autorenew" size={18} color="#fff" />
+              <Text style={styles.btnText}>Revoir les tenues</Text>
+            </Pressable>
+            {lastAction && (
+              <Pressable onPress={undo} hitSlop={10}>
+                <Text style={styles.link}>Annuler le dernier swipe</Text>
+              </Pressable>
+            )}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -316,7 +259,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#fff' },
-  container: { padding: 20, gap: 16 },
+  container: { padding: 20, gap: 16, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   error: { fontSize: 16, textAlign: 'center' },
   weatherCard: { backgroundColor: '#e8f1ff', borderRadius: 16, padding: 20, alignItems: 'center' },
@@ -331,40 +274,25 @@ const styles = StyleSheet.create({
   chipText: { color: '#222' },
   chipTextActive: { color: '#fff' },
   title: { fontSize: 20, fontWeight: '600' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  swipeCard: {
-    position: 'relative',
-    backgroundColor: '#f7f7f7',
-    borderRadius: 18,
-    padding: 12,
-    gap: 12,
-  },
-  swipeBadge: {
-    position: 'absolute',
-    top: 18,
-    zIndex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 2,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#fff',
-  },
-  keepBadge: { left: 18, borderColor: '#16834a', transform: [{ rotate: '-10deg' }] },
-  skipBadge: { right: 18, borderColor: '#d94343', transform: [{ rotate: '10deg' }] },
-  swipeBadgeText: { fontSize: 15, fontWeight: '800' },
-  keepBadgeText: { color: '#16834a' },
-  skipBadgeText: { color: '#d94343' },
   swipeHint: { color: '#666', textAlign: 'center', fontSize: 13 },
-  piece: { width: '47%' },
-  pieceImg: { width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: '#f2f2f2' },
-  pieceLabel: { marginTop: 4, textTransform: 'capitalize' },
-  note: { color: '#a15c00' },
-  actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  swipeActions: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 22 },
+  roundBtn: {
+    width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#fff', borderWidth: 2,
+    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3,
+  },
+  skipBtn: { borderColor: '#d94343' },
+  keepBtn: { borderColor: '#16834a' },
+  roundBtnSmall: {
+    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#f1f1f1',
+  },
+  disabled: { opacity: 0.35 },
+  emptyBox: { alignItems: 'center', gap: 12, paddingVertical: 24 },
+  emptyText: { color: '#666', textAlign: 'center' },
+  link: { color: '#2F6FED', fontWeight: '600' },
   btn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: '#222', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12,
   },
   btnWorn: { backgroundColor: '#2F6FED' },
