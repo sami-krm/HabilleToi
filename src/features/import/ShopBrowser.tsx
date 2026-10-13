@@ -3,8 +3,8 @@ import { useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
-import type { Shop } from '@/features/onboarding/profile';
 import { Palette } from '@/constants/theme';
+import type { Shop } from '@/features/onboarding/profile';
 import { EXTRACT_SCRIPT, type RawItem } from './importUtils';
 
 interface Props {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.accent, paddingVertical: 12, borderRadius: 14,
   },
   btnDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
-  btnText: { color: Palette.black, fontWeight: '600' },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
   btnGhost: { backgroundColor: Palette.surfaceRaised },
   btnGhostText: { color: Palette.text, fontWeight: '600' },
 });

@@ -1,14 +1,15 @@
+import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { type ComponentProps, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Palette } from '@/constants/theme';
 import ShopImport from '@/features/import/ShopImport';
 import ShopLogo from './ShopLogo';
-import {
-  AGE_OPTIONS, CHANNEL_OPTIONS, COUNTRIES, GENDER_OPTIONS, OCCUPATION_OPTIONS, SHOPS, saveProfile,
-} from './profile';
 import type { AgeRange, Channel, Gender, Occupation, Option, UserProfile } from './profile';
-import { Palette } from '@/constants/theme';
+import {
+    AGE_OPTIONS, CHANNEL_OPTIONS, COUNTRIES, GENDER_OPTIONS, OCCUPATION_OPTIONS, SHOPS, saveProfile,
+} from './profile';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 type Answers = Omit<UserProfile, 'onboardingDone'>;
@@ -29,7 +30,7 @@ const TEXTS: Record<Exclude<StepKey, 'import'>, { title: string; subtitle?: stri
 function OptionCard({
   option, selected, multi, onPress,
 }: { option: Option; selected: boolean; multi?: boolean; onPress: () => void }) {
-  const color = selected ? Palette.black : Palette.text;
+  const color = selected ? Palette.onAccent : Palette.text;
   return (
     <Pressable onPress={onPress} style={[styles.card, selected && styles.cardActive]}>
       {option.icon && <MaterialCommunityIcons name={option.icon as IconName} size={22} color={color} />}
@@ -134,7 +135,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
                   <Text style={styles.tileName} numberOfLines={1}>{shop.name}</Text>
                   {selected && (
                     <View style={styles.check}>
-                      <MaterialCommunityIcons name="check" size={14} color={Palette.black} />
+                      <MaterialCommunityIcons name="check" size={14} color={Palette.onAccent} />
                     </View>
                   )}
                 </Pressable>
@@ -148,7 +149,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
   const { title, subtitle } = TEXTS[step];
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       {/* En-tête : flèche retour, barre de progression, « Passer » */}
       <View style={styles.header}>
         {stepIndex > 0 ? (
@@ -178,7 +179,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
           <Text style={styles.primaryText}>Continuer</Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
@@ -198,12 +199,12 @@ const styles = StyleSheet.create({
   },
   cardActive: { backgroundColor: Palette.accent, borderColor: Palette.accent },
   cardLabel: { flex: 1, fontSize: 16, color: Palette.text },
-  cardLabelActive: { color: Palette.black },
+  cardLabelActive: { color: Palette.onAccent },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   chip: { paddingHorizontal: 18, paddingVertical: 12, borderRadius: 24, backgroundColor: Palette.surfaceRaised },
   chipActive: { backgroundColor: Palette.accent },
   chipText: { fontSize: 16, color: Palette.textSecondary },
-  chipTextActive: { color: Palette.black },
+  chipTextActive: { color: Palette.onAccent },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   tile: {
     width: '31.5%', alignItems: 'center', gap: 8, paddingVertical: 14,
@@ -218,5 +219,5 @@ const styles = StyleSheet.create({
   footer: { padding: 20 },
   primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
-  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Palette.onAccent, fontSize: 16, fontWeight: '700' },
 });

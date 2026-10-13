@@ -2,10 +2,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
 import { FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import {
-  COLOR_HEX, COLOR_ORDER, TYPE_LABELS, TYPE_ORDER, normalize, type FoundItem,
-} from './importUtils';
 import { Palette } from '@/constants/theme';
+import {
+    COLOR_HEX, COLOR_ORDER, TYPE_LABELS, TYPE_ORDER, normalize, type FoundItem,
+} from './importUtils';
 
 type Row = FoundItem & { selected: boolean };
 
@@ -136,9 +136,9 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: Palette.border,
   },
   pillText: { fontSize: 12, textTransform: 'capitalize', color: Palette.textSecondary },
-  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: Palette.border },
+  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1, borderColor: Palette.hairline },
   footer: { padding: 16 },
   primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
-  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Palette.onAccent, fontSize: 16, fontWeight: '700' },
 });

@@ -1,14 +1,16 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
-import { addDaysISO, formatShort, todayISO } from '@/services/tripDates';
+import AuroraScreen from '@/components/AuroraScreen';
+import { Palette } from '@/constants/theme';
+import { addDaysISO, todayISO } from '@/services/tripDates';
 import { searchPlaces } from '@/services/tripWeather';
 import type { Style } from '@/types';
+import RangeCalendar from './RangeCalendar';
 import type { Place } from './tripTypes';
-import { Palette } from '@/constants/theme';
 
 const OCCASIONS: { key: Style; label: string }[] = [
   { key: 'casual', label: 'Casual' },
@@ -17,8 +19,8 @@ const OCCASIONS: { key: Style; label: string }[] = [
   { key: 'soiree', label: 'Soirée' },
 ];
 
-const MAX_DAYS = 21;
-const MAX_OFFSET = 365;
+const MAX_DAYS = 21;    // durée maximale d'un séjour
+const MAX_OFFSET = 365; // départ au plus tard dans un an
 
 export interface TripFormValues {
   place: Place;
@@ -35,38 +37,17 @@ interface Props {
   onCancel: () => void;
 }
 
-function Stepper({
-  label, value, onChange, min, max, steps,
-}: { label: string; value: number; onChange: (v: number) => void; min: number; max: number; steps: number[] }) {
-  const change = (delta: number) => onChange(Math.max(min, Math.min(max, value + delta)));
-  return (
-    <View style={styles.stepper}>
-      {[...steps].reverse().map((s) => (
-        <Pressable key={`m${s}`} style={styles.stepBtn} onPress={() => change(-s)}>
-          <Text style={styles.stepText}>−{s}</Text>
-        </Pressable>
-      ))}
-      <Text style={styles.stepValue}>{label}</Text>
-      {steps.map((s) => (
-        <Pressable key={`p${s}`} style={styles.stepBtn} onPress={() => change(s)}>
-          <Text style={styles.stepText}>+{s}</Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel }: Props) {
   const [query, setQuery] = useState('');
   const [place, setPlace] = useState<Place | null>(null);
   const [results, setResults] = useState<Place[]>([]);
   const [searching, setSearching] = useState(false);
-  const [offset, setOffset] = useState(7);      // départ dans N jours
-  const [duration, setDuration] = useState(5);  // nombre de jours sur place
   const [occasions, setOccasions] = useState<Style[]>(['casual']);
 
-  const startDate = addDaysISO(todayISO(), offset);
-  const endDate = addDaysISO(startDate, duration - 1);
+  // Dates : par défaut, départ dans 7 jours pour 5 jours sur place
+  const today = todayISO();
+  const [start, setStart] = useState<string | null>(() => addDaysISO(today, 7));
+  const [end, setEnd] = useState<string | null>(() => addDaysISO(today, 11));
 
   // Recherche de ville avec un petit délai pour ne pas appeler l'API à chaque lettre
   useEffect(() => {
@@ -98,10 +79,10 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
     setOccasions((prev) => (prev.includes(s) ? (prev.length > 1 ? prev.filter((x) => x !== s) : prev) : [...prev, s]));
 
   const tooSmall = wardrobeSize < 3;
-  const canSubmit = !!place && !busy && !tooSmall;
+  const canSubmit = !!place && !!start && !!end && !busy && !tooSmall;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Pressable onPress={onCancel} hitSlop={12}>
@@ -116,6 +97,7 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
           <TextInput
             style={styles.input}
             placeholder="Ville (ex. Lisbonne)"
+            placeholderTextColor={Palette.textSecondary}
             value={query}
             onChangeText={(t) => { setQuery(t); setPlace(null); }}
             autoCorrect={false}
@@ -131,15 +113,15 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
           </Pressable>
         ))}
 
-        <Text style={styles.label}>Départ</Text>
-        <Text style={styles.dateText}>{formatShort(startDate)}</Text>
-        <Stepper label="jours" value={offset} onChange={setOffset} min={0} max={MAX_OFFSET} steps={[1, 7]} />
-
-        <Text style={styles.label}>Durée</Text>
-        <Text style={styles.dateText}>
-          {duration} jour{duration > 1 ? 's' : ''} · retour le {formatShort(endDate)}
-        </Text>
-        <Stepper label="jours" value={duration} onChange={setDuration} min={1} max={MAX_DAYS} steps={[1, 3]} />
+        <Text style={styles.label}>Dates</Text>
+        <RangeCalendar
+          start={start}
+          end={end}
+          onChange={(s, e) => { setStart(s); setEnd(e); }}
+          minDate={today}
+          maxDate={addDaysISO(today, MAX_OFFSET)}
+          maxDays={MAX_DAYS}
+        />
 
         <Text style={styles.label}>Occasions</Text>
         <View style={styles.chips}>
@@ -163,21 +145,20 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
         <Pressable
           style={[styles.primary, !canSubmit && styles.primaryDisabled]}
           disabled={!canSubmit}
-          onPress={() => place && onSubmit({ place, startDate, endDate, occasions })}
+          onPress={() => place && start && end && onSubmit({ place, startDate: start, endDate: end, occasions })}
         >
-          {busy ? <ActivityIndicator color={Palette.black} /> : <Text style={styles.primaryText}>Préparer ma valise</Text>}
+          {busy ? <ActivityIndicator color={Palette.onAccent} /> : <Text style={styles.primaryText}>Préparer ma valise</Text>}
         </Pressable>
       </View>
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.background },
   body: { padding: 20, gap: 10, paddingBottom: 24 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  title: { fontSize: 24, fontWeight: '700', color: Palette.text },
-  label: { fontSize: 16, fontWeight: '600', marginTop: 12, color: Palette.text },
+  title: { fontSize: 24, fontWeight: '800', color: Palette.text },
+  label: { fontSize: 16, fontWeight: '700', marginTop: 12, color: Palette.text },
   search: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Palette.surfaceRaised, borderColor: Palette.border, borderWidth: 1, borderRadius: 14, paddingHorizontal: 12,
@@ -186,19 +167,14 @@ const styles = StyleSheet.create({
   result: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 14, padding: 12 },
   resultName: { fontSize: 16, fontWeight: '600', color: Palette.text },
   resultSub: { color: Palette.textSecondary, fontSize: 13, marginTop: 2 },
-  dateText: { color: Palette.textSecondary, fontSize: 15, textTransform: 'capitalize' },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  stepBtn: { backgroundColor: Palette.surfaceRaised, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  stepText: { fontWeight: '700', color: Palette.accent },
-  stepValue: { flex: 1, textAlign: 'center', color: Palette.textSecondary },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
   chipActive: { backgroundColor: Palette.accent },
   chipText: { color: Palette.textSecondary },
-  chipTextActive: { color: Palette.black },
+  chipTextActive: { color: Palette.onAccent },
   warn: { color: Palette.warning, marginTop: 8 },
   footer: { padding: 20 },
   primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
-  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Palette.onAccent, fontSize: 16, fontWeight: '700' },
 });

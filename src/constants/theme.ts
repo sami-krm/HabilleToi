@@ -8,23 +8,27 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const Palette = {
-  background: '#0C0B11',
-  surface: '#15131B',
-  surfaceRaised: '#1D1A25',
-  surfaceSelected: '#2B2240',
-  border: '#302B3B',
-  text: '#F5F2FA',
-  textSecondary: '#A6A0B3',
-  accent: '#9B7BFF',
-  accentSoft: '#2A2140',
-  success: '#56D6A0',
-  danger: '#F17D91',
-  warning: '#F2C574',
+  background: '#F4F1FF',
+  surface: 'rgba(255,255,255,0.58)',        // verre
+  surfaceRaised: 'rgba(255,255,255,0.88)',  // verre plus opaque (carte de tenue)
+  surfaceSelected: '#FFFFFF',
+  border: 'rgba(255,255,255,0.95)',
+  hairline: 'rgba(23,20,43,0.14)',          // fin contour visible sur fond clair (pastilles de couleur)
+  text: '#17142B',
+  textSecondary: '#4E4968',
+  accent: '#5B3DF5',
+  accentSoft: 'rgba(91,61,245,0.12)',
+  success: '#13825A',
+  danger: '#C93550',
+  warning: '#A8630A',
   white: '#FFFFFF',
-  black: '#08070B',
+  black: '#17142B',
+  onAccent: '#FFFFFF',                      // texte et icônes sur fond violet
+  ink: '#17142B',                           // fond des boutons sombres
+  shadow: '#46329F',
 } as const;
 
-// L'app conserve le thème Atelier nocturne même si le téléphone est en mode clair.
+// L'app garde le thème « Aurore claire » quel que soit le mode du téléphone.
 const appColors = {
   text: Palette.text,
   background: Palette.background,
@@ -36,6 +40,18 @@ const appColors = {
 export const Colors = {
   light: appColors,
   dark: appColors,
+} as const;
+
+/** Style « verre » partagé : blanc translucide, contour clair, ombre violette douce. */
+export const Glass = {
+  backgroundColor: Palette.surface,
+  borderWidth: 1,
+  borderColor: Palette.border,
+  shadowColor: Palette.shadow,
+  shadowOpacity: 0.12,
+  shadowRadius: 14,
+  shadowOffset: { width: 0, height: 6 },
+  elevation: 2,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

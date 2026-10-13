@@ -2,16 +2,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Palette } from '@/constants/theme';
 import ShopLogo from '@/features/onboarding/ShopLogo';
 import { SHOPS, type Shop } from '@/features/onboarding/profile';
 import { loadWardrobe, saveWardrobe } from '@/storage/wardrobeStorage';
 import type { ClothingItem } from '@/types';
 import ImportResults from './ImportResults';
 import ShopBrowser from './ShopBrowser';
-import { Palette } from '@/constants/theme';
 import {
-  notifyImportDone, requestNotificationPermission, storeImage, toFoundItem,
-  type FoundItem, type RawItem,
+    notifyImportDone, requestNotificationPermission, storeImage, toFoundItem,
+    type FoundItem, type RawItem,
 } from './importUtils';
 
 type Phase = 'intro' | 'browser' | 'results' | 'importing' | 'done';
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   shopName: { flex: 1, fontSize: 17, fontWeight: '600', color: Palette.text },
   footer: { padding: 20 },
   primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
-  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Palette.onAccent, fontSize: 16, fontWeight: '700' },
   ghost: { backgroundColor: Palette.surfaceRaised },
   ghostText: { color: Palette.text },
 });

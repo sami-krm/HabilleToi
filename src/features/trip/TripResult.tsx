@@ -1,13 +1,14 @@
+import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, type ComponentProps } from 'react';
 import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Palette } from '@/constants/theme';
 import { PACK_ORDER, typePlural, typeSingular } from '@/services/packingGenerator';
 import { formatDay, formatShort } from '@/services/tripDates';
-import { allColors } from '@/types';
 import type { ClothingItem, ColorName } from '@/types';
+import { allColors } from '@/types';
 import type { DayWeather, SavedTrip } from './tripTypes';
-import { Palette } from '@/constants/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -50,7 +51,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
     ]);
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.header}>
           <Pressable onPress={onBack} hitSlop={12}>
@@ -170,7 +171,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
 
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={onRegenerate}>
-            <MaterialCommunityIcons name="autorenew" size={18} color={Palette.black} />
+            <MaterialCommunityIcons name="autorenew" size={18} color={Palette.onAccent} />
             <Text style={styles.btnText}>Autre sélection</Text>
           </Pressable>
           <Pressable style={[styles.btn, styles.btnGhost]} onPress={confirmDelete}>
@@ -179,7 +180,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
           </Pressable>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
@@ -211,7 +212,7 @@ const styles = StyleSheet.create({
   rowInfo: { flex: 1, gap: 4 },
   rowName: { fontSize: 16, fontWeight: '600', color: Palette.text },
   dots: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.hairline },
   dirty: { color: Palette.warning, fontSize: 12, marginLeft: 4 },
   dayCard: { backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 12, gap: 8 },
   dayCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -225,5 +226,5 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
   btnGhost: { backgroundColor: Palette.surfaceRaised },
-  btnText: { color: Palette.black, fontWeight: '600' },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
 });

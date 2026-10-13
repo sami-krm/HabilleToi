@@ -2,9 +2,9 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text } from 'react-native';
 
+import { Palette } from '@/constants/theme';
 import { loadProfile } from '@/features/onboarding/profile';
 import ShopImport from './ShopImport';
-import { Palette } from '@/constants/theme';
 
 /** Bouton « Importer » (onglet Dressing) : ouvre l'import depuis une boutique dans une fenêtre plein écran. */
 export default function ImportFromShopButton({ onImported }: { onImported: () => void }) {
@@ -26,7 +26,7 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
   return (
     <>
       <Pressable style={styles.btn} onPress={openImport}>
-        <MaterialCommunityIcons name="storefront-outline" size={18} color={Palette.black} />
+        <MaterialCommunityIcons name="storefront-outline" size={18} color={Palette.onAccent} />
         <Text style={styles.btnText}>Importer</Text>
       </Pressable>
 
@@ -43,5 +43,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: Palette.black, fontWeight: '600' },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
 });

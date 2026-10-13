@@ -86,7 +86,7 @@ export default function FavoritesView() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.background },
+  safe: { flex: 1 },
   list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   title: { fontSize: 22, fontWeight: '700', marginBottom: 8, color: Palette.text },
   empty: { color: Palette.textSecondary, marginTop: 24 },

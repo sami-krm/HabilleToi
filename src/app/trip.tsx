@@ -1,10 +1,12 @@
+import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
-import TripForm from '@/features/trip/TripForm';
+import { Palette } from '@/constants/theme';
 import type { TripFormValues } from '@/features/trip/TripForm';
+import TripForm from '@/features/trip/TripForm';
 import TripResult from '@/features/trip/TripResult';
 import type { SavedTrip } from '@/features/trip/tripTypes';
 import { useWardrobe } from '@/hooks/useWardrobe';
@@ -12,7 +14,6 @@ import { generatePacking } from '@/services/packingGenerator';
 import { diffDays, formatShort } from '@/services/tripDates';
 import { getTripWeather, TripWeatherError } from '@/services/tripWeather';
 import { loadTrips, saveTrips } from '@/storage/tripStorage';
-import { Palette } from '@/constants/theme';
 
 type Screen = { name: 'list' } | { name: 'form' } | { name: 'result'; id: string };
 
@@ -120,7 +121,7 @@ export default function TripScreen() {
 
   // ---------- Liste des valises ----------
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       <FlatList
         data={trips}
         keyExtractor={(t) => t.id}
@@ -129,7 +130,7 @@ export default function TripScreen() {
           <View style={styles.header}>
             <Text style={styles.title}>Mes valises</Text>
             <Pressable style={styles.btn} onPress={() => setScreen({ name: 'form' })}>
-              <MaterialCommunityIcons name="plus" size={18} color={Palette.black} />
+              <MaterialCommunityIcons name="plus" size={18} color={Palette.onAccent} />
               <Text style={styles.btnText}>Nouvelle valise</Text>
             </Pressable>
           </View>
@@ -162,7 +163,7 @@ export default function TripScreen() {
           );
         }}
       />
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
@@ -180,5 +181,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start',
     backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: Palette.black, fontWeight: '600' },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
 });

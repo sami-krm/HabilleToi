@@ -39,7 +39,8 @@ export interface Weather {
   precipitation: number;  // mm
   windSpeed: number;      // km/h
   city?: string;          // lieu de la position utilisée
-
+  weatherCode?: number;   // code météo WMO (0 = ciel dégagé, 3 = couvert, 61 = pluie...)
+  isDay?: boolean;        // jour ou nuit à cet endroit
 }
 
 /** Une tenue portée un jour donné (enregistrée dans l'historique). */

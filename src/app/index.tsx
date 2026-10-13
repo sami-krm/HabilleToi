@@ -1,21 +1,23 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View,
-} from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View,
+} from 'react-native';
 
+import AuroraScreen from '@/components/AuroraScreen';
 import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
-import MorningReminderModal from '@/features/notifications/MorningReminderModal';
 import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
-import { refreshMorningReminders } from '@/services/morningReminder';
-import { getCurrentWeather, WeatherError } from '@/services/weatherService';
-import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
+import { Glass, Palette } from '@/constants/theme';
+import MorningReminderModal from '@/features/notifications/MorningReminderModal';
 import { useHistory } from '@/hooks/useHistory';
 import { useWardrobe } from '@/hooks/useWardrobe';
+import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
+import { refreshMorningReminders } from '@/services/morningReminder';
+import { getCurrentWeather, WeatherError } from '@/services/weatherService';
+import { weatherVisual } from '@/services/weatherIcon';
 import { loadFavorites, saveFavorites } from '@/storage/wardrobeStorage';
-import { Palette } from '@/constants/theme';
 import type { Outfit, Style, Weather } from '@/types';
 
 const OCCASIONS: { key: Style; label: string }[] = [
@@ -157,48 +159,68 @@ export default function HomeScreen() {
 
   // ---------- Rendu ----------
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" /></View>;
+    return (
+      <AuroraScreen>
+        <View style={styles.center}><ActivityIndicator size="large" color={Palette.accent} /></View>
+      </AuroraScreen>
+    );
   }
   if (error || !weather) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.error}>{error ?? 'Météo indisponible.'}</Text>
-        <Pressable style={styles.btn} onPress={loadWeather}>
-          <Text style={styles.btnText}>Réessayer</Text>
-        </Pressable>
-      </View>
+      <AuroraScreen>
+        <View style={styles.center}>
+          <Text style={styles.error}>{error ?? 'Météo indisponible.'}</Text>
+          <Pressable style={styles.btn} onPress={loadWeather}>
+            <Text style={styles.btnText}>Réessayer</Text>
+          </Pressable>
+        </View>
+      </AuroraScreen>
     );
   }
 
+  // Icône du temps (soleil, nuage, pluie...) d'après le code météo
+  const visual = weatherVisual(weather.weatherCode, weather.isDay ?? true);
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.weatherCard}>
-          <Pressable style={styles.bell} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
-            <MaterialCommunityIcons name="bell-outline" size={24} color={Palette.text} />
-          </Pressable>
-          {weather.city && <Text style={styles.city}>{weather.city}</Text>}
-          <Text style={styles.temp}>{Math.round(weather.temperature)}°C</Text>
-          <View style={styles.weatherRow}>
-            <View style={styles.weatherItem}>
-              <MaterialCommunityIcons name="weather-rainy" size={22} color={Palette.accent} />
-              <Text style={styles.weatherLine}>{weather.precipitation} mm</Text>
-            </View>
-            <View style={styles.weatherItem}>
-              <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
-              <Text style={styles.weatherLine}>{Math.round(weather.windSpeed)} km/h</Text>
-            </View>
+        {/* En-tête : ville + rappel, grande température */}
+        <View style={styles.headerTop}>
+          <View style={styles.cityChip}>
+            <MaterialCommunityIcons name="map-marker" size={16} color={Palette.accent} />
+            <Text style={styles.cityText}>{weather.city ?? 'Ma position'}</Text>
           </View>
+          <Pressable style={styles.bell} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
+            <MaterialCommunityIcons name="bell-outline" size={22} color={Palette.text} />
+          </Pressable>
         </View>
 
-        <View style={styles.chips}>
+        <View style={styles.tempRow}>
+          <Text style={styles.temp} numberOfLines={1} adjustsFontSizeToFit>
+            {Math.round(weather.temperature)}°
+          </Text>
+          <View style={styles.stats}>
+            <View style={styles.statRow}>
+              <MaterialCommunityIcons name="water-outline" size={22} color={Palette.accent} />
+              <Text style={styles.statText}>Pluie {weather.precipitation} mm</Text>
+            </View>
+            <View style={styles.statRow}>
+              <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
+              <Text style={styles.statText}>Vent {Math.round(weather.windSpeed)} km/h</Text>
+            </View>
+          </View>
+          <MaterialCommunityIcons name={visual.name} size={56} color={visual.color} accessibilityLabel={visual.label} />
+        </View>
+
+        {/* Occasion : sélecteur en verre */}
+        <View style={styles.segmented}>
           {OCCASIONS.map((o) => (
             <Pressable
               key={o.key}
               onPress={() => setOccasion(o.key)}
-              style={[styles.chip, occasion === o.key && styles.chipActive]}
+              style={[styles.segment, occasion === o.key && styles.segmentActive]}
             >
-              <Text style={occasion === o.key ? styles.chipTextActive : styles.chipText}>{o.label}</Text>
+              <Text style={occasion === o.key ? styles.segmentTextActive : styles.segmentText}>{o.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -215,34 +237,34 @@ export default function HomeScreen() {
             />
             <Text style={styles.swipeHint}>Glisse à droite pour garder · à gauche pour passer</Text>
 
-            <View style={styles.swipeActions}>
+            <View style={styles.actionRow}>
               <Pressable
-                style={[styles.roundBtn, styles.skipBtn]}
+                style={styles.sideBtn}
                 onPress={() => deckRef.current?.swipe('left')}
                 accessibilityLabel="Passer cette tenue"
               >
-                <MaterialCommunityIcons name="close" size={30} color={Palette.danger} />
+                <MaterialCommunityIcons name="close" size={24} color={Palette.text} />
+              </Pressable>
+              <Pressable style={styles.wornBtn} onPress={markWorn}>
+                <Text style={styles.wornText}>Je la porte</Text>
               </Pressable>
               <Pressable
-                style={[styles.roundBtnSmall, !lastAction && styles.disabled]}
-                onPress={undo}
-                disabled={!lastAction}
-                accessibilityLabel="Annuler le dernier swipe"
-              >
-                <MaterialCommunityIcons name="undo-variant" size={22} color={Palette.textSecondary} />
-              </Pressable>
-              <Pressable
-                style={[styles.roundBtn, styles.keepBtn]}
+                style={[styles.sideBtn, styles.keepBtn]}
                 onPress={() => deckRef.current?.swipe('right')}
                 accessibilityLabel="Garder cette tenue en favori"
               >
-                <MaterialCommunityIcons name="heart" size={28} color={Palette.accent} />
+                <MaterialCommunityIcons name="heart" size={24} color={Palette.onAccent} />
               </Pressable>
             </View>
 
-            <Pressable style={[styles.btn, styles.btnWorn]} onPress={markWorn}>
-              <MaterialCommunityIcons name="calendar-check" size={18} color={Palette.white} />
-              <Text style={[styles.btnText, styles.btnWornText]}>Je porte cette tenue</Text>
+            <Pressable
+              style={[styles.undo, !lastAction && styles.disabled]}
+              onPress={undo}
+              disabled={!lastAction}
+              accessibilityLabel="Annuler le dernier swipe"
+            >
+              <MaterialCommunityIcons name="undo-variant" size={16} color={Palette.textSecondary} />
+              <Text style={styles.undoText}>Annuler le dernier swipe</Text>
             </Pressable>
           </>
         ) : (
@@ -252,7 +274,7 @@ export default function HomeScreen() {
               Plus de tenue à proposer. Ajoute des vêtements, lave ceux qui sont sales, ou revois les tenues déjà passées.
             </Text>
             <Pressable style={styles.btn} onPress={resetDeck}>
-              <MaterialCommunityIcons name="autorenew" size={18} color={Palette.black} />
+              <MaterialCommunityIcons name="autorenew" size={18} color={Palette.onAccent} />
               <Text style={styles.btnText}>Revoir les tenues</Text>
             </Pressable>
             {lastAction && (
@@ -265,42 +287,47 @@ export default function HomeScreen() {
       </ScrollView>
 
       <MorningReminderModal visible={reminderOpen} onClose={() => setReminderOpen(false)} />
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.background },
   container: { padding: 20, gap: 16, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12, backgroundColor: Palette.background },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
   error: { fontSize: 16, textAlign: 'center', color: Palette.text },
-  weatherCard: { backgroundColor: Palette.accentSoft, borderRadius: 24, padding: 20, alignItems: 'center', borderWidth: 1, borderColor: Palette.border },
-  bell: { position: 'absolute', top: 12, right: 12, padding: 4, zIndex: 1 },
-  temp: { fontSize: 50, fontWeight: '700', color: Palette.text, letterSpacing: -2 },
-  city: { fontSize: 16, fontWeight: '600', color: Palette.textSecondary },
-  weatherRow: { flexDirection: 'row', gap: 24, marginTop: 8 },
-  weatherItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  weatherLine: { fontSize: 16, color: Palette.text },
-  chips: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
-  chipActive: { backgroundColor: Palette.accent },
-  chipText: { color: Palette.textSecondary },
-  chipTextActive: { color: Palette.black, fontWeight: '600' },
-  title: { fontSize: 22, fontWeight: '700', color: Palette.text, letterSpacing: -0.4 },
+
+  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  cityChip: {
+    ...Glass, flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7,
+  },
+  cityText: { fontSize: 13, fontWeight: '700', color: Palette.text },
+  bell: { ...Glass, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+
+  tempRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  temp: { flexShrink: 1, fontSize: 84, lineHeight: 90, fontWeight: '800', letterSpacing: -3, color: Palette.text },
+  stats: { gap: 12 },
+  statRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statText: { fontSize: 17, fontWeight: '700', color: Palette.textSecondary },
+
+  segmented: { ...Glass, flexDirection: 'row', borderRadius: 22, padding: 4 },
+  segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 18 },
+  segmentActive: { backgroundColor: Palette.ink },
+  segmentText: { color: Palette.textSecondary, fontWeight: '700', fontSize: 13 },
+  segmentTextActive: { color: Palette.onAccent, fontWeight: '700', fontSize: 13 },
+
+  title: { fontSize: 22, fontWeight: '800', color: Palette.text, letterSpacing: -0.4 },
   swipeHint: { color: Palette.textSecondary, textAlign: 'center', fontSize: 13 },
-  swipeActions: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 22 },
-  roundBtn: {
-    width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border,
-    shadowColor: Palette.black, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 3,
-  },
-  skipBtn: { borderColor: Palette.danger },
-  keepBtn: { borderColor: Palette.accent },
-  roundBtnSmall: {
-    width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border,
-  },
+
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  sideBtn: { ...Glass, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  keepBtn: { backgroundColor: Palette.accent, borderColor: Palette.accent },
+  wornBtn: { flex: 1, height: 56, borderRadius: 28, backgroundColor: Palette.ink, alignItems: 'center', justifyContent: 'center' },
+  wornText: { color: Palette.onAccent, fontSize: 16, fontWeight: '800' },
+  undo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
+  undoText: { color: Palette.textSecondary, fontSize: 13, fontWeight: '600' },
   disabled: { opacity: 0.35 },
+
   emptyBox: { alignItems: 'center', gap: 12, paddingVertical: 24 },
   emptyText: { color: Palette.textSecondary, textAlign: 'center' },
   link: { color: Palette.accent, fontWeight: '600' },
@@ -308,7 +335,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 16,
   },
-  btnWorn: { backgroundColor: Palette.surfaceRaised, borderWidth: 1, borderColor: Palette.border },
-  btnText: { color: Palette.black, fontWeight: '600' },
-  btnWornText: { color: Palette.text },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
 });

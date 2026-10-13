@@ -142,7 +142,7 @@ export default function HistoryView() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.background },
+  safe: { flex: 1 },
   list: { padding: 20, gap: 8, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   header: { gap: 4, marginBottom: 8 },
   title: { fontSize: 22, fontWeight: '700', color: Palette.text },

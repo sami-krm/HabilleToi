@@ -1,15 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Linking, Modal, Pressable, SafeAreaView, StyleSheet, Switch, Text, View,
+    ActivityIndicator, Alert, Linking, Modal, Pressable, SafeAreaView, StyleSheet, Switch, Text, View,
 } from 'react-native';
 
-import {
-  cancelMorningReminders, ensureNotificationPermission, ReminderError, scheduleMorningReminders, sendTestReminder,
-} from '@/services/morningReminder';
-import { DEFAULT_REMINDER, loadReminderSettings, saveReminderSettings } from './reminderSettings';
-import type { ReminderSettings } from './reminderSettings';
 import { Palette } from '@/constants/theme';
+import {
+    cancelMorningReminders, ensureNotificationPermission, ReminderError, scheduleMorningReminders, sendTestReminder,
+} from '@/services/morningReminder';
+import type { ReminderSettings } from './reminderSettings';
+import { DEFAULT_REMINDER, loadReminderSettings, saveReminderSettings } from './reminderSettings';
 
 const formatTime = (h: number, m: number) => `${h} h ${String(m).padStart(2, '0')}`;
 
@@ -137,7 +137,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
         <View style={styles.footer}>
           <Pressable style={[styles.primary, busy && styles.primaryDisabled]} onPress={save} disabled={busy}>
-            {busy ? <ActivityIndicator color={Palette.black} /> : <Text style={styles.primaryText}>Enregistrer</Text>}
+            {busy ? <ActivityIndicator color={Palette.onAccent} /> : <Text style={styles.primaryText}>Enregistrer</Text>}
           </Pressable>
         </View>
       </SafeAreaView>
@@ -171,5 +171,5 @@ const styles = StyleSheet.create({
   footer: { padding: 20 },
   primary: { backgroundColor: Palette.accent, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
   primaryDisabled: { backgroundColor: Palette.surfaceSelected, opacity: 0.55 },
-  primaryText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
+  primaryText: { color: Palette.onAccent, fontSize: 16, fontWeight: '700' },
 });

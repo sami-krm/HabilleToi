@@ -1,18 +1,19 @@
+import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View,
+    ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 
+import { Palette } from '@/constants/theme';
+import ImportFromShopButton from '@/features/import/ImportFromShopButton';
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { recognizeClothing } from '@/services/clothingRecognition';
-import { allColors } from '@/types';
 import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
-import ImportFromShopButton from '@/features/import/ImportFromShopButton';
-import { Palette } from '@/constants/theme';
+import { allColors } from '@/types';
 
 // ---------- Données d'affichage ----------
 const TYPES: { key: ClothingType; label: string }[] = [
@@ -279,7 +280,7 @@ export default function WardrobeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <AuroraScreen>
       {/* Titre et boutons d'ajout */}
       <View style={styles.top}>
         <Text style={styles.title}>
@@ -288,11 +289,11 @@ export default function WardrobeScreen() {
         </Text>
         <View style={styles.actions}>
           <Pressable style={styles.btn} onPress={() => pickImage('camera')}>
-            <MaterialCommunityIcons name="camera-outline" size={18} color={Palette.black} />
+            <MaterialCommunityIcons name="camera-outline" size={18} color={Palette.onAccent} />
             <Text style={styles.btnText}>Photo</Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => pickImage('library')}>
-            <MaterialCommunityIcons name="image-outline" size={18} color={Palette.black} />
+            <MaterialCommunityIcons name="image-outline" size={18} color={Palette.onAccent} />
             <Text style={styles.btnText}>Galerie</Text>
           </Pressable>
           <ImportFromShopButton onImported={reload} />
@@ -497,7 +498,7 @@ export default function WardrobeScreen() {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </SafeAreaView>
+    </AuroraScreen>
   );
 }
 
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
     minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
     backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
-  filterBadgeText: { color: Palette.black, fontSize: 11, fontWeight: '700' },
+  filterBadgeText: { color: Palette.onAccent, fontSize: 11, fontWeight: '700' },
   panel: { maxHeight: 280, marginHorizontal: 20, marginBottom: 8, backgroundColor: Palette.surface, borderRadius: 16, borderWidth: 1, borderColor: Palette.border },
   panelContent: { padding: 14, gap: 10 },
   panelLabel: { fontWeight: '600', fontSize: 14, marginTop: 4, color: Palette.text },
@@ -549,14 +550,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
   },
-  btnText: { color: Palette.black, fontWeight: '600' },
+  btnText: { color: Palette.onAccent, fontWeight: '600' },
   btnGhost: { backgroundColor: Palette.surfaceRaised },
   btnGhostText: { color: Palette.text, fontWeight: '600' },
   card: { flex: 1, backgroundColor: Palette.surface, borderRadius: 18, padding: 8, gap: 6, borderWidth: 1, borderColor: Palette.border },
   cardDirty: { opacity: 0.6 },
   cardImg: { width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   cardInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.hairline },
   cardLabel: { flexShrink: 1, marginLeft: 2, color: Palette.text },
   cleanBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8 },
   cleanOk: { backgroundColor: '#247A5C' },
@@ -579,17 +580,17 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised },
   chipActive: { backgroundColor: Palette.accent },
   chipText: { color: Palette.textSecondary },
-  chipTextActive: { color: Palette.black },
+  chipTextActive: { color: Palette.onAccent },
   swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   swatchWrap: { alignItems: 'center', width: 56 },
-  swatch: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: Palette.border },
+  swatch: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: Palette.hairline },
   swatchActive: { borderWidth: 3, borderColor: Palette.accent },
   swatchLabel: { fontSize: 11, marginTop: 2, color: Palette.textSecondary },
   badge: {
     position: 'absolute', top: -4, right: -6, width: 18, height: 18, borderRadius: 9,
     backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { color: Palette.black, fontSize: 11, fontWeight: '700' },
+  badgeText: { color: Palette.onAccent, fontSize: 11, fontWeight: '700' },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     marginTop: 16, paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: Palette.danger,

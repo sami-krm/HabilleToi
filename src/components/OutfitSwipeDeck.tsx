@@ -1,18 +1,18 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useEffect, useImperativeHandle, useMemo } from 'react';
 import type { Ref } from 'react';
+import { useEffect, useImperativeHandle, useMemo } from 'react';
 import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
-  Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withTiming,
-} from 'react-native-reanimated';
 import type { SharedValue } from 'react-native-reanimated';
+import Animated, {
+    Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withTiming,
+} from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { allColors } from '@/types';
-import type { ColorName, Outfit } from '@/types';
 import { Palette } from '@/constants/theme';
+import type { ColorName, Outfit } from '@/types';
+import { allColors } from '@/types';
 
 export type SwipeDirection = 'left' | 'right';
 
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Palette.surfaceRaised, borderRadius: 24, padding: 12, gap: 10,
     borderWidth: 1, borderColor: Palette.border, overflow: 'hidden',
-    shadowColor: Palette.black, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
+    shadowColor: Palette.shadow, shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
   tint: { ...StyleSheet.absoluteFill, zIndex: 1 },
@@ -229,6 +229,6 @@ const styles = StyleSheet.create({
   pieceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
   pieceLabel: { fontWeight: '600', flexShrink: 1, color: Palette.text },
   dots: { flexDirection: 'row', gap: 4 },
-  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.border },
+  dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.hairline },
   note: { color: Palette.warning },
 });

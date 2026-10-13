@@ -1,7 +1,9 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import { Palette } from '@/constants/theme';
+
+import AuroraBackground from '@/components/AuroraBackground';
+import { Glass, Palette } from '@/constants/theme';
 
 const APP_NAME = 'Tenue du jour'; // à adapter
 
@@ -24,6 +26,7 @@ export default function LoadingScreen() {
 
   return (
     <View style={styles.container}>
+      <AuroraBackground />
       <Animated.View style={[styles.logo, { transform: [{ scale }] }]}>
         <MaterialCommunityIcons name="hanger" size={64} color={Palette.accent} />
       </Animated.View>
@@ -37,10 +40,10 @@ export default function LoadingScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Palette.background, alignItems: 'center', justifyContent: 'center', gap: 8 },
   logo: {
-    width: 120, height: 120, borderRadius: 30, backgroundColor: Palette.surfaceRaised,
+    ...Glass, width: 120, height: 120, borderRadius: 36,
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  name: { color: Palette.text, fontSize: 28, fontWeight: '700' },
+  name: { color: Palette.text, fontSize: 30, fontWeight: '800', letterSpacing: -0.5 },
   tagline: { color: Palette.textSecondary, fontSize: 16 },
   spinner: { marginTop: 24 },
 });

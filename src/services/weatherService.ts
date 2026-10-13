@@ -24,7 +24,7 @@ export async function getCurrentWeather(): Promise<Weather> {
   const url =
     `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}` +
     `&longitude=${coords.longitude}` +
-    `&current=temperature_2m,precipitation,wind_speed_10m`;
+    `&current=temperature_2m,precipitation,wind_speed_10m,weather_code,is_day`;
   
   // Nom du lieu (affiché pour vérifier la position utilisée)
   let city: string | undefined;
@@ -48,6 +48,8 @@ export async function getCurrentWeather(): Promise<Weather> {
     temperature: json.current.temperature_2m,
     precipitation: json.current.precipitation,
     windSpeed: json.current.wind_speed_10m, // km/h par défaut
+    weatherCode: json.current.weather_code,
+    isDay: json.current.is_day === 1,
     city,
   };
 }
