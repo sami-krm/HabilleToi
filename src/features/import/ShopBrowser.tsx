@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View, Keyboard, AppState } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { Palette } from '@/constants/theme';
@@ -29,8 +29,12 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
 
   // Si ces lignes réapparaissent dans le terminal pendant la saisie, l'écran a été recréé
   useEffect(() => {
-    console.log('[ShopBrowser] monté');
-    return () => console.log('[ShopBrowser] démonté');
+    const subs = [
+      Keyboard.addListener('keyboardWillShow', () => console.log('[cycle] clavier visible')),
+      Keyboard.addListener('keyboardDidHide', () => console.log('[cycle] clavier masqué')),
+      AppState.addEventListener('change', (s) => console.log('[cycle] AppState =', s)),
+    ];
+    return () => subs.forEach((s) => s.remove());
   }, []);
 
   const analyze = () => {

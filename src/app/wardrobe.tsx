@@ -1,6 +1,7 @@
 {/* import DemoDataButton from '@/features/dev/DemoDataButton'; */}
 import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
@@ -75,6 +76,7 @@ function Chip({ label, active, onPress }: { label: string; active: boolean; onPr
 
 export default function WardrobeScreen() {
   const { items, reload, addItem, removeItem, updateItem, setClean } = useWardrobe();
+  useLifecycleLog('Dressing');
 
   // ----- Filtres et catégories -----
   const [category, setCategory] = useState<Category>('all');

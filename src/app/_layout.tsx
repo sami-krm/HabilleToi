@@ -1,4 +1,5 @@
 import { DefaultTheme, ThemeProvider } from 'expo-router';
+import { useLifecycleLog } from '@/utils/lifecycleLog';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -26,6 +27,7 @@ const navTheme = {
 
 export default function TabLayout() {
   const { ready, done, finish } = useOnboardingGate();
+  useLifecycleLog('Layout racine');
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

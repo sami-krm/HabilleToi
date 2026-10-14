@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-
+import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { Palette } from '@/constants/theme';
 import ShopLogo from '@/features/onboarding/ShopLogo';
 import { SHOPS, type Shop } from '@/features/onboarding/profile';
@@ -30,6 +30,8 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [importedCount, setImportedCount] = useState(0);
   const [knownUrls, setKnownUrls] = useState<Set<string>>(new Set()); // articles déjà dans le dressing
+  useLifecycleLog('ShopImport');
+  useEffect(() => { console.log('[cycle] ShopImport phase =', phase); }, [phase]);
 
   // Retient les images déjà importées pour ne pas les reproposer
   useEffect(() => {

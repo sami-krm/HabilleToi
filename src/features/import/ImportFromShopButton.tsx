@@ -4,10 +4,12 @@ import { Modal, Pressable, StyleSheet, Text } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import { loadProfile } from '@/features/onboarding/profile';
+import { useLifecycleLog } from '@/utils/lifecycleLog';
 import ShopImport from './ShopImport';
 
 /** Bouton « Importer » (onglet Dressing) : ouvre l'import depuis une boutique dans une fenêtre plein écran. */
 export default function ImportFromShopButton({ onImported }: { onImported: () => void }) {
+  useLifecycleLog('Bouton import');
   const [open, setOpen] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
 
@@ -19,6 +21,7 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
 
   // À la fermeture, on demande à l'écran Dressing de recharger la liste
   const close = () => {
+    console.log('[cycle] close() appelée');
     setOpen(false);
     onImported();
   };
@@ -30,7 +33,12 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
         <Text style={styles.btnText}>Importer</Text>
       </Pressable>
 
-      <Modal visible={open} animationType="slide" onRequestClose={close}>
+      <Modal
+        visible={open}
+        animationType="slide"
+        onRequestClose={() => { console.log('[cycle] onRequestClose'); close(); }}
+        onDismiss={() => console.log('[cycle] Modal fermé côté iOS')}
+      >
         {/* Rendu seulement quand la fenêtre est ouverte : l'état de l'import repart de zéro à chaque fois */}
         {open && <ShopImport standalone shopIds={favoriteIds} onBack={close} onDone={close} />}
       </Modal>
