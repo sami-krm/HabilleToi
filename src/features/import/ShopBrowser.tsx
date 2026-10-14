@@ -1,11 +1,17 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { Palette } from '@/constants/theme';
 import type { Shop } from '@/features/onboarding/profile';
 import { EXTRACT_SCRIPT, type RawItem } from './importUtils';
+
+// Mets false pour tester : aucune session n'est alors effacée à la fermeture (moins de risques de boucle de connexion)
+const PRIVATE_MODE = true;
+
+// Seules ces adresses restent dans l'app ; les liens du type « zara://... » ouvriraient l'app de la boutique
+const allowRequest = (url: string) => /^(https?:|about:|data:|blob:)/i.test(url);
 
 interface Props {
   shop: Shop;
@@ -20,6 +26,12 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
   const [guideOpen, setGuideOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<string | null>(null);
+
+  // Si ces lignes réapparaissent dans le terminal pendant la saisie, l'écran a été recréé
+  useEffect(() => {
+    console.log('[ShopBrowser] monté');
+    return () => console.log('[ShopBrowser] démonté');
+  }, []);
 
   const analyze = () => {
     setStatus('Analyse de la page…');
@@ -71,9 +83,21 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
         <WebView
           ref={webRef}
           source={{ uri: shop.url }}
-          incognito // aucune session conservée après la fermeture
+          incognito={PRIVATE_MODE} // aucune session conservée après la fermeture
           javaScriptEnabled
           domStorageEnabled
+          originWhitelist={['https://*', 'http://*']}
+          applicationNameForUserAgent="Version/17.5 Mobile/15E148 Safari/604.1" // se présente comme Safari
+          allowsLinkPreview={false}
+          onShouldStartLoadWithRequest={(req) => {
+            if (allowRequest(req.url)) return true;
+            setStatus("Le site a voulu ouvrir son application : redirection bloquée.");
+            return false;
+          }}
+          // La page web a manqué de mémoire : on la recharge au lieu de la laisser vide
+          onContentProcessDidTerminate={() => webRef.current?.reload()}
+          onRenderProcessGone={() => webRef.current?.reload()}
+          onError={() => setStatus("Cette page n'a pas pu se charger. Vérifie ta connexion.")}
           onLoadStart={() => setLoading(true)}
           onLoadEnd={() => setLoading(false)}
           onMessage={onMessage}

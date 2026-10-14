@@ -1,3 +1,4 @@
+{/* import DemoDataButton from '@/features/dev/DemoDataButton'; */}
 import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { File, Paths } from 'expo-file-system';
@@ -297,6 +298,7 @@ export default function WardrobeScreen() {
             <Text style={styles.btnText}>Galerie</Text>
           </Pressable>
           <ImportFromShopButton onImported={reload} />
+          {/* <DemoDataButton onChanged={reload} /> */}
         </View>
       </View>
 

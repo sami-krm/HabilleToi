@@ -1,12 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { useEffect, useMemo, useState } from 'react';
 import {
-    ActivityIndicator, Alert, Linking, Modal, Pressable, SafeAreaView, StyleSheet, Switch, Text, View,
+  ActivityIndicator, Alert, Linking, Modal, Platform, Pressable, StyleSheet, Switch, Text, View,
 } from 'react-native';
 
-import { Palette } from '@/constants/theme';
+import AuroraScreen from '@/components/AuroraScreen';
+import { Glass, Palette } from '@/constants/theme';
 import {
-    cancelMorningReminders, ensureNotificationPermission, ReminderError, scheduleMorningReminders, sendTestReminder,
+  cancelMorningReminders, ensureNotificationPermission, ReminderError, scheduleMorningReminders, sendTestReminder,
 } from '@/services/morningReminder';
 import type { ReminderSettings } from './reminderSettings';
 import { DEFAULT_REMINDER, loadReminderSettings, saveReminderSettings } from './reminderSettings';
@@ -18,7 +21,7 @@ interface Props {
   onClose: () => void;
 }
 
-/** Fenêtre de réglage du rappel du matin : interrupteur, heure, essai. */
+/** Fenêtre de réglage du rappel du matin : interrupteur, heure (molettes), essai. */
 export default function MorningReminderModal({ visible, onClose }: Props) {
   const [draft, setDraft] = useState<ReminderSettings>(DEFAULT_REMINDER);
   const [busy, setBusy] = useState(false);
@@ -31,12 +34,21 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
     loadReminderSettings().then(setDraft);
   }, [visible]);
 
-  // Décale l'heure en minutes, en restant dans la même journée
-  const shift = (deltaMinutes: number) =>
-    setDraft((d) => {
-      const total = (((d.hour * 60 + d.minute + deltaMinutes) % 1440) + 1440) % 1440;
-      return { ...d, hour: Math.floor(total / 60), minute: total % 60 };
-    });
+  // Le sélecteur travaille avec une date : on y place l'heure choisie
+  const timeValue = useMemo(() => {
+    const d = new Date();
+    d.setHours(draft.hour, draft.minute, 0, 0);
+    return d;
+  }, [draft.hour, draft.minute]);
+
+  const onTimeChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (event.type === 'dismissed' || !date) return;
+    setDraft((d) => ({ ...d, hour: date.getHours(), minute: date.getMinutes() }));
+  };
+
+  // Android : le sélecteur s'ouvre dans une fenêtre système
+  const openAndroidPicker = () =>
+    DateTimePickerAndroid.open({ value: timeValue, mode: 'time', is24Hour: true, onChange: onTimeChange });
 
   const run = async (task: () => Promise<void>) => {
     setBusy(true);
@@ -90,7 +102,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={styles.safe}>
+      <AuroraScreen>
         <View style={styles.body}>
           <View style={styles.header}>
             <Pressable onPress={onClose} hitSlop={12}>
@@ -106,23 +118,32 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Recevoir le rappel</Text>
-            <Switch value={draft.enabled} onValueChange={(enabled) => setDraft((d) => ({ ...d, enabled }))} />
+            <Switch
+              value={draft.enabled}
+              onValueChange={(enabled) => setDraft((d) => ({ ...d, enabled }))}
+              trackColor={{ false: Palette.hairline, true: Palette.accent }}
+            />
           </View>
 
+          {/* Heure : molettes comme les réveils de l'iPhone */}
           <View style={[styles.timeBox, !draft.enabled && styles.disabled]} pointerEvents={draft.enabled ? 'auto' : 'none'}>
-            <Text style={styles.time}>{formatTime(draft.hour, draft.minute)}</Text>
-            <View style={styles.stepper}>
-              {[
-                { label: '−1 h', delta: -60 },
-                { label: '−15 min', delta: -15 },
-                { label: '+15 min', delta: 15 },
-                { label: '+1 h', delta: 60 },
-              ].map((s) => (
-                <Pressable key={s.label} style={styles.stepBtn} onPress={() => shift(s.delta)}>
-                  <Text style={styles.stepText}>{s.label}</Text>
-                </Pressable>
-              ))}
-            </View>
+            {Platform.OS === 'ios' ? (
+              <DateTimePicker
+                value={timeValue}
+                mode="time"
+                display="spinner"
+                locale="fr-FR"
+                themeVariant="light"
+                textColor={Palette.text}
+                onChange={onTimeChange}
+                style={styles.picker}
+              />
+            ) : (
+              <Pressable onPress={openAndroidPicker} style={styles.androidTime}>
+                <Text style={styles.time}>{formatTime(draft.hour, draft.minute)}</Text>
+                <Text style={styles.timeHint}>Touche pour changer l'heure</Text>
+              </Pressable>
+            )}
           </View>
 
           {draft.enabled && (
@@ -140,31 +161,30 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
             {busy ? <ActivityIndicator color={Palette.onAccent} /> : <Text style={styles.primaryText}>Enregistrer</Text>}
           </Pressable>
         </View>
-      </SafeAreaView>
+      </AuroraScreen>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Palette.background },
   body: { flex: 1, padding: 20, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  title: { fontSize: 24, fontWeight: '700', color: Palette.text },
+  title: { fontSize: 24, fontWeight: '800', color: Palette.text },
   sub: { color: Palette.textSecondary, fontSize: 15 },
   row: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 16, padding: 16,
+    ...Glass, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    borderRadius: 16, padding: 16,
   },
   rowLabel: { fontSize: 16, fontWeight: '600', color: Palette.text },
-  timeBox: { alignItems: 'center', gap: 12, backgroundColor: Palette.accentSoft, borderRadius: 18, padding: 20 },
+  timeBox: { ...Glass, borderRadius: 24, paddingVertical: 4, overflow: 'hidden' },
   disabled: { opacity: 0.4 },
-  time: { fontSize: 44, fontWeight: '700', color: Palette.text },
-  stepper: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', justifyContent: 'center' },
-  stepBtn: { backgroundColor: Palette.surfaceRaised, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  stepText: { fontWeight: '700', color: Palette.accent },
+  picker: { height: 200 },
+  androidTime: { alignItems: 'center', gap: 4, paddingVertical: 24 },
+  time: { fontSize: 44, fontWeight: '800', color: Palette.text },
+  timeHint: { color: Palette.textSecondary, fontSize: 13 },
   testBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: Palette.surfaceRaised, borderRadius: 14, paddingVertical: 14,
+    ...Glass, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderRadius: 14, paddingVertical: 14,
   },
   testText: { fontWeight: '600', color: Palette.text },
   status: { color: Palette.textSecondary },

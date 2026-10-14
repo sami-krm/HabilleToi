@@ -3,15 +3,18 @@ import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 
 import AuroraScreen from '@/components/AuroraScreen';
+import { GlassCard } from '@/components/GlassCard';
 import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
 import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
+import ProfileModal from '@/components/ProfileModal';
 import { Glass, Palette } from '@/constants/theme';
 import MorningReminderModal from '@/features/notifications/MorningReminderModal';
 import { useHistory } from '@/hooks/useHistory';
+import { useProfile } from '@/hooks/useProfile';
 import { useWardrobe } from '@/hooks/useWardrobe';
 import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { refreshMorningReminders } from '@/services/morningReminder';
@@ -43,11 +46,13 @@ export default function HomeScreen() {
   const [queue, setQueue] = useState<Outfit[]>([]);
   const [lastAction, setLastAction] = useState<LastAction | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const seenRef = useRef<Set<string>>(new Set());
   const deckRef = useRef<SwipeDeckHandle>(null);
 
   const { items, reload, setClean } = useWardrobe();
   const { entries: history, reload: reloadHistory, addWorn } = useHistory();
+  const { profile, update: updateProfile } = useProfile();
 
   const outfit = queue[0] ?? null;
 
@@ -181,36 +186,52 @@ export default function HomeScreen() {
   // Icône du temps (soleil, nuage, pluie...) d'après le code météo
   const visual = weatherVisual(weather.weatherCode, weather.isDay ?? true);
 
+  // Température affichée selon l'unité choisie dans le profil
+  const shownTemp = profile.unit === 'F'
+    ? Math.round(weather.temperature * 9 / 5 + 32)
+    : Math.round(weather.temperature);
+
   return (
     <AuroraScreen>
       <ScrollView contentContainerStyle={styles.container}>
-        {/* En-tête : ville + rappel, grande température */}
+        {/* En-tête : ville à gauche, cloche puis profil à droite */}
         <View style={styles.headerTop}>
           <View style={styles.cityChip}>
             <MaterialCommunityIcons name="map-marker" size={16} color={Palette.accent} />
             <Text style={styles.cityText}>{weather.city ?? 'Ma position'}</Text>
           </View>
-          <Pressable style={styles.bell} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
-            <MaterialCommunityIcons name="bell-outline" size={22} color={Palette.text} />
-          </Pressable>
+
+          <View style={styles.actions}>
+            <Pressable style={styles.iconBtn} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
+              <MaterialCommunityIcons name="bell-outline" size={22} color={Palette.text} />
+            </Pressable>
+            <Pressable style={styles.iconBtn} onPress={() => setProfileOpen(true)} hitSlop={10} accessibilityLabel="Mon profil">
+              {profile.avatar
+                ? <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+                : <MaterialCommunityIcons name="account-outline" size={24} color={Palette.text} />}
+            </Pressable>
+          </View>
         </View>
 
-        <View style={styles.tempRow}>
-          <Text style={styles.temp} numberOfLines={1} adjustsFontSizeToFit>
-            {Math.round(weather.temperature)}°
-          </Text>
-          <View style={styles.stats}>
-            <View style={styles.statRow}>
-              <MaterialCommunityIcons name="water-outline" size={22} color={Palette.accent} />
-              <Text style={styles.statText}>Pluie {weather.precipitation} mm</Text>
+        {/* Température + infos météo dans une carte liquid glass */}
+        <GlassCard>
+          <View style={styles.tempRow}>
+            <Text style={styles.temp} numberOfLines={1} adjustsFontSizeToFit>
+              {shownTemp}°
+            </Text>
+            <View style={styles.stats}>
+              <View style={styles.statRow}>
+                <MaterialCommunityIcons name="water-outline" size={22} color={Palette.accent} />
+                <Text style={styles.statText}>Pluie {weather.precipitation} mm</Text>
+              </View>
+              <View style={styles.statRow}>
+                <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
+                <Text style={styles.statText}>Vent {Math.round(weather.windSpeed)} km/h</Text>
+              </View>
             </View>
-            <View style={styles.statRow}>
-              <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
-              <Text style={styles.statText}>Vent {Math.round(weather.windSpeed)} km/h</Text>
-            </View>
+            <MaterialCommunityIcons name={visual.name} size={56} color={visual.color} accessibilityLabel={visual.label} />
           </View>
-          <MaterialCommunityIcons name={visual.name} size={56} color={visual.color} accessibilityLabel={visual.label} />
-        </View>
+        </GlassCard>
 
         {/* Occasion : sélecteur en verre */}
         <View style={styles.segmented}>
@@ -225,7 +246,9 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <Text style={styles.title}>Ta tenue du jour</Text>
+        <Text style={styles.title}>
+          {profile.name ? `Ta tenue du jour, ${profile.name}` : 'Ta tenue du jour'}
+        </Text>
 
         {outfit ? (
           <>
@@ -287,6 +310,12 @@ export default function HomeScreen() {
       </ScrollView>
 
       <MorningReminderModal visible={reminderOpen} onClose={() => setReminderOpen(false)} />
+      <ProfileModal
+        visible={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        profile={profile}
+        update={updateProfile}
+      />
     </AuroraScreen>
   );
 }
@@ -302,7 +331,12 @@ const styles = StyleSheet.create({
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7,
   },
   cityText: { fontSize: 13, fontWeight: '700', color: Palette.text },
-  bell: { ...Glass, width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  iconBtn: {
+    ...Glass, width: 40, height: 40, borderRadius: 20, overflow: 'hidden',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatar: { width: 40, height: 40 },
 
   tempRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   temp: { flexShrink: 1, fontSize: 84, lineHeight: 90, fontWeight: '800', letterSpacing: -3, color: Palette.text },

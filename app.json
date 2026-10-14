@@ -47,7 +47,8 @@
           "photosPermission": "Pour importer les photos de tes vêtements.",
           "cameraPermission": "Pour photographier tes vêtements."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
