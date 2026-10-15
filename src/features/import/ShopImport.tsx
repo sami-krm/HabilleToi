@@ -66,8 +66,8 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
       const id = `${Date.now()}-${i}`;
       const uri = await storeImage(f.image, id);
       created.push({
-        id, uri, type: f.type, color: f.color, extraColors: [],
-        styles: ['casual'], pattern: 'uni', clean: true,
+        id, uri, type: f.type, color: f.color, extraColors: f.extraColors ?? [],
+        styles: f.styles ?? ['casual'], pattern: f.pattern ?? 'uni', clean: true,
         sourceUrl: f.image,
       });
       setProgress({ done: i + 1, total: selected.length });
