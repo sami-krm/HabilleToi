@@ -58,6 +58,9 @@ Deno.serve(async (request) => {
   const input = new FormData();
   input.set('size', 'auto');
   input.set('format', 'png');
+  // Recadre l'image autour du vêtement détouré, avec une petite marge
+  input.set('crop', 'true');
+  input.set('crop_margin', '6%');
   const uploadBuffer = new ArrayBuffer(imageBytes.length);
   new Uint8Array(uploadBuffer).set(imageBytes);
   input.set('image_file', new Blob([uploadBuffer], { type: 'image/jpeg' }), 'vetement.jpg');
