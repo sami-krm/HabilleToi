@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -14,6 +13,7 @@ import ProfileModal from '@/components/ProfileModal';
 import CityPickerModal from '@/components/CityPickerModal';
 import { RoundAction } from '@/components/RoundAction';
 import StylistModal from '@/components/StylistModal';
+import WeatherDetailsModal from '@/components/WeatherDetailsModal';
 import { STYLE_OPTIONS, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import MorningReminderModal from '@/features/notifications/MorningReminderModal';
@@ -23,7 +23,7 @@ import { useWardrobe } from '@/hooks/useWardrobe';
 import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { refreshMorningReminders } from '@/services/morningReminder';
 import { getCurrentWeather, saveLocation, WeatherError, type SavedLocation } from '@/services/weatherService';
-import { type IconName, weatherVisual } from '@/services/weatherIcon';
+import { weatherVisual } from '@/services/weatherIcon';
 import { findCalendarOccasion } from '@/services/calendarOccasion';
 import { updateDailyOutfitWidget } from '@/widgets/updateDailyOutfitWidget';
 import { loadFavorites, loadHistory, saveFavorites } from '@/storage/wardrobeStorage';
@@ -41,23 +41,17 @@ const DAYS: { key: string; label: string }[] = [
 
 const DECK_SIZE = 2; // la tenue du dessus + celle qui attend derrière
 
-interface LastAction {
-  outfit: Outfit;
-  direction: SwipeDirection;
-  favoriteId?: string;
-}
-
 export default function HomeScreen() {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [occasion, setOccasion] = useState<Style>('casual');
   const [queue, setQueue] = useState<Outfit[]>([]);
-  const [lastAction, setLastAction] = useState<LastAction | null>(null);
   const [reminderOpen, setReminderOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [stylistOpen, setStylistOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
   const [calendarHint, setCalendarHint] = useState<Style | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -182,7 +176,6 @@ export default function HomeScreen() {
       fresh.push(next);
     }
     setQueue(fresh);
-    setLastAction(null);
   }, [draw]);
 
   // Nouvelle série quand la météo, l'occasion, le dressing ou l'historique changent
@@ -192,16 +185,9 @@ export default function HomeScreen() {
   }, [resetDeck]);
 
   // ---------- Favoris ----------
-  const addFavorite = useCallback(async (current: Outfit): Promise<string> => {
-    const id = String(Date.now());
+  const addFavorite = useCallback(async (current: Outfit) => {
     const favs = await loadFavorites();
-    await saveFavorites([...favs, { id, itemIds: current.items.map((i) => i.id), createdAt: Date.now() }]);
-    return id;
-  }, []);
-
-  const removeFavorite = useCallback(async (id: string) => {
-    const favs = await loadFavorites();
-    await saveFavorites(favs.filter((f) => f.id !== id));
+    await saveFavorites([...favs, { id: String(Date.now()), itemIds: current.items.map((i) => i.id), createdAt: Date.now() }]);
   }, []);
 
   // ---------- Swipe ----------
@@ -212,30 +198,13 @@ export default function HomeScreen() {
     // L'interface avance tout de suite ; l'enregistrement se fait en arrière-plan
     const extra = draw();
     setQueue([...queue.slice(1), ...(extra ? [extra] : [])]);
-    setLastAction({ outfit: current, direction });
 
     const signature = outfitSignature(current.items);
     recordOutfitPreference(signature, direction).then(() => loadOutfitPreferences().then(setPreferences)).catch(() => { });
     if (direction === 'right') {
-      addFavorite(current)
-        .then((favoriteId) => setLastAction((a) => (a?.outfit === current ? { ...a, favoriteId } : a)))
-        .catch(() => Alert.alert('Erreur', "Impossible d'ajouter cette tenue aux favoris."));
+      addFavorite(current).catch(() => Alert.alert('Erreur', "Impossible d'ajouter cette tenue aux favoris."));
     }
   }, [addFavorite, draw, queue]);
-
-  const undo = useCallback(() => {
-    if (!lastAction) return;
-    Haptics.selectionAsync().catch(() => { });
-    const restored = [lastAction.outfit, ...queue];
-    // On ne garde que DECK_SIZE cartes ; celle qui sort pourra revenir plus tard
-    while (restored.length > DECK_SIZE) {
-      const dropped = restored.pop();
-      if (dropped) seenRef.current.delete(outfitSignature(dropped.items));
-    }
-    setQueue(restored);
-    if (lastAction.favoriteId) removeFavorite(lastAction.favoriteId).catch(() => { });
-    setLastAction(null);
-  }, [lastAction, queue, removeFavorite]);
 
   // Tenue portée : historique, puis on demande si les vêtements vont au sale
   const markWorn = async () => {
@@ -288,7 +257,6 @@ export default function HomeScreen() {
 
   // Températures affichées selon l'unité choisie dans le profil
   const toUnit = (t: number) => Math.round(profile.unit === 'F' ? t * 9 / 5 + 32 : t);
-  const feels = weather.apparentTemperature ?? weather.temperature;
   const low = weather.minTemperature ?? weather.temperature;
   const high = weather.maxTemperature ?? weather.temperature;
   const advice = weather.rainTime
@@ -331,20 +299,9 @@ export default function HomeScreen() {
         {/* Grande température au centre, comme un solde */}
         <View style={styles.hero}>
           <Text style={styles.heroLabel} numberOfLines={1}>{weather.city?.split(',')[0] ?? 'Ma position'} · {visual.label}</Text>
-          {/* Détails météo de part et d'autre de la température */}
-          <View style={styles.heroRow}>
-            <View style={styles.heroSide}>
-              <HeroStat icon="thermometer" value={`${toUnit(low)}° / ${toUnit(high)}°`} label="Min · max" />
-              <HeroStat icon="weather-pouring" value={`${weather.precipitation} mm`} label={weather.rainTime ? `Vers ${weather.rainTime}` : 'Pas de pluie'} />
-            </View>
-            <View style={styles.heroTempRow}>
-              <Text style={styles.heroTemp} numberOfLines={1} adjustsFontSizeToFit>{toUnit(weather.temperature)}</Text>
-              <Text style={styles.heroUnit}>°{profile.unit}</Text>
-            </View>
-            <View style={[styles.heroSide, styles.heroSideRight]}>
-              <HeroStat icon="weather-windy" value={`${Math.round(weather.windSpeed)} km/h`} label={weather.windSpeed > 30 ? 'Vent fort' : 'Vent calme'} right />
-              <HeroStat icon="account-outline" value={`${toUnit(feels)}°`} label="Ressenti" right />
-            </View>
+          <View style={styles.heroTempRow}>
+            <Text style={styles.heroTemp} numberOfLines={1} adjustsFontSizeToFit>{toUnit(weather.temperature)}</Text>
+            <Text style={styles.heroUnit}>°{profile.unit}</Text>
           </View>
           <View style={styles.heroPill}>
             <MaterialCommunityIcons name="lightbulb-on-outline" size={18} color={Palette.white} />
@@ -355,9 +312,8 @@ export default function HomeScreen() {
         {/* Actions rapides */}
         <View style={styles.actionsRow}>
           <RoundAction icon="creation" label="Styliste" onPress={() => setStylistOpen(true)} />
-          <RoundAction icon="check" label="Je la porte" onPress={markWorn} disabled={!outfit} />
+          <RoundAction icon="information-variant" label="Plus d’infos" onPress={() => setDetailsOpen(true)} />
           <RoundAction icon="autorenew" label="Nouvelle série" onPress={resetDeck} />
-          <RoundAction icon="undo-variant" label="Annuler" onPress={undo} disabled={!lastAction} />
         </View>
 
         <AnimatedSegmented options={DAYS} value={String(dayOffset)} onChange={(key) => setDayOffset(Number(key))} />
@@ -384,7 +340,10 @@ export default function HomeScreen() {
               <Pressable style={styles.swipeBtn} onPress={() => deckRef.current?.swipe('left')} accessibilityLabel="Passer cette tenue">
                 <MaterialCommunityIcons name="close" size={26} color={Palette.text} />
               </Pressable>
-              <Text style={styles.swipeHint}>Glisse pour trier</Text>
+              <Pressable style={styles.wornBtn} onPress={markWorn} accessibilityLabel="Je porte cette tenue">
+                <MaterialCommunityIcons name="check" size={20} color={Palette.black} />
+                <Text style={styles.wornText}>Je la porte</Text>
+              </Pressable>
               <Pressable
                 style={[styles.swipeBtn, styles.keepBtn]}
                 onPress={() => deckRef.current?.swipe('right')}
@@ -416,19 +375,9 @@ export default function HomeScreen() {
         onDataRestored={() => { reload(); reloadHistory(); }}
       />
       <CityPickerModal visible={cityOpen} onClose={() => setCityOpen(false)} onSelect={chooseCity} />
+      <WeatherDetailsModal visible={detailsOpen} onClose={() => setDetailsOpen(false)} weather={weather} unit={profile.unit} advice={advice} />
       <StylistModal visible={stylistOpen} onClose={() => setStylistOpen(false)} items={items} weather={weather} />
     </AuroraScreen>
-  );
-}
-
-/** Petite info météo affichée à côté de la grande température. */
-function HeroStat({ icon, value, label, right }: { icon: IconName; value: string; label: string; right?: boolean }) {
-  return (
-    <View style={[styles.stat, right && styles.statRight]}>
-      <View style={styles.statIcon}><MaterialCommunityIcons name={icon} size={16} color={Palette.white} /></View>
-      <Text style={[styles.statValue, right && styles.textRight]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
-      <Text style={[styles.statLabel, right && styles.textRight]} numberOfLines={1}>{label}</Text>
-    </View>
   );
 }
 
@@ -455,23 +404,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center',
   },
 
-  hero: { alignItems: 'center', paddingTop: 36, paddingBottom: 28, gap: 10 },
+  hero: { alignItems: 'center', paddingTop: 48, paddingBottom: 32, gap: 10 },
   heroLabel: { color: Palette.white, fontSize: 17, fontWeight: '500', opacity: 0.9 },
-  heroRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
-  heroSide: { width: 96, gap: 16 },
-  heroSideRight: { alignItems: 'flex-end' },
-  heroTempRow: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
-  heroTemp: { color: Palette.white, fontSize: 80, lineHeight: 88, fontWeight: '700', letterSpacing: -2, flexShrink: 1 },
+  heroTempRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
+  heroTemp: { color: Palette.white, fontSize: 88, lineHeight: 96, fontWeight: '700', letterSpacing: -2, flexShrink: 1 },
   heroUnit: { color: Palette.white, fontSize: 26, fontWeight: '700', marginBottom: 14, marginLeft: 2 },
-  stat: { gap: 2 },
-  statRight: { alignItems: 'flex-end' },
-  statIcon: {
-    width: 28, height: 28, borderRadius: 14, backgroundColor: Palette.overlay,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
-  },
-  statValue: { color: Palette.white, fontSize: 16, fontWeight: '700' },
-  statLabel: { color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: '500' },
-  textRight: { textAlign: 'right' },
   heroPill: {
     marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%',
     paddingHorizontal: 18, paddingVertical: 11, borderRadius: 999, backgroundColor: Palette.overlay,
@@ -482,13 +419,17 @@ const styles = StyleSheet.create({
   calendarHint: { color: Palette.accent, fontSize: 13, fontWeight: '600', marginTop: -8, textAlign: 'center' },
 
   sectionTitle: { fontSize: 22, fontWeight: '700', color: Palette.text, letterSpacing: -0.4, marginTop: 6 },
-  swipeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  swipeRow: { flexDirection: 'row', alignItems: 'center' },
   swipeBtn: {
     width: 60, height: 60, borderRadius: 30,
     backgroundColor: Palette.surface, alignItems: 'center', justifyContent: 'center',
   },
   keepBtn: { backgroundColor: Palette.accent },
-  swipeHint: { color: Palette.textSecondary, fontSize: 13 },
+  wornBtn: {
+    flex: 1, height: 60, borderRadius: 30, marginHorizontal: 12, backgroundColor: Palette.white,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+  },
+  wornText: { color: Palette.black, fontSize: 16, fontWeight: '700' },
 
   emptyBox: { alignItems: 'center', gap: 14, paddingVertical: 28, paddingHorizontal: 16, backgroundColor: Palette.surface, borderRadius: 28 },
   emptyText: { color: Palette.textSecondary, textAlign: 'center' },
