@@ -47,3 +47,10 @@ export function useProfile() {
 
   return { profile, update };
 }
+
+/** Enregistre une partie du profil hors d'un écran (ex. à la fin du questionnaire). */
+export async function patchStoredProfile(patch: Partial<Profile>): Promise<void> {
+  const raw = await AsyncStorage.getItem(KEY).catch(() => null);
+  const current = { ...DEFAULT_PROFILE, ...(raw ? JSON.parse(raw) : {}) };
+  await AsyncStorage.setItem(KEY, JSON.stringify({ ...current, ...patch }));
+}

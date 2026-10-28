@@ -5,6 +5,7 @@ export type Gender = 'femme' | 'homme' | 'autre';
 export type Channel = 'sites-marques' | 'marketplaces' | 'seconde-main' | 'magasin';
 export type Occupation = 'etudiant' | 'salarie' | 'independant' | 'recherche' | 'autre';
 export type AgeRange = 'moins-18' | '18-24' | '25-34' | '35-44' | '45-54' | '55-plus';
+export type Goal = 'temps' | 'meteo' | 'variete' | 'valise' | 'dressing';
 
 export interface UserProfile {
   gender?: Gender;
@@ -13,6 +14,7 @@ export interface UserProfile {
   occupation?: Occupation;
   ageRange?: AgeRange;
   shops?: string[];         // ids des boutiques favorites
+  goals?: Goal[];           // ce que l'on attend de l'app
   onboardingDone: boolean;
 }
 
@@ -42,11 +44,19 @@ export const CHANNEL_OPTIONS: Option<Channel>[] = [
 ];
 
 export const OCCUPATION_OPTIONS: Option<Occupation>[] = [
-  { key: 'etudiant', label: 'Étudiant(e)' },
-  { key: 'salarie', label: 'Salarié(e)' },
-  { key: 'independant', label: 'Indépendant(e) / freelance' },
-  { key: 'recherche', label: "En recherche d'emploi" },
-  { key: 'autre', label: 'Autre' },
+  { key: 'etudiant', label: 'Étudiant(e)', icon: 'school-outline' },
+  { key: 'salarie', label: 'Salarié(e)', icon: 'briefcase-outline' },
+  { key: 'independant', label: 'Indépendant(e) / freelance', icon: 'laptop' },
+  { key: 'recherche', label: "En recherche d'emploi", icon: 'magnify' },
+  { key: 'autre', label: 'Autre', icon: 'dots-horizontal' },
+];
+
+export const GOAL_OPTIONS: Option<Goal>[] = [
+  { key: 'temps', label: 'Gagner du temps le matin', icon: 'timer-outline' },
+  { key: 'meteo', label: 'Ne plus avoir trop chaud ou trop froid', icon: 'weather-partly-cloudy' },
+  { key: 'variete', label: 'Varier mes tenues', icon: 'shuffle-variant' },
+  { key: 'valise', label: 'Faire ma valise sans stress', icon: 'bag-suitcase-outline' },
+  { key: 'dressing', label: 'Mieux connaître mon dressing', icon: 'hanger' },
 ];
 
 export const AGE_OPTIONS: Option<AgeRange>[] = [
