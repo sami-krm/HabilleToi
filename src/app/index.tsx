@@ -1,20 +1,22 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { AnimatedSegmented } from '@/components/AnimatedSegmented';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Alert, AppState, Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Alert, Animated, AppState, Image, Pressable, RefreshControl, StyleSheet, Text, View,
 } from 'react-native';
 
+import { AnimatedSegmented } from '@/components/AnimatedSegmented';
 import AuroraScreen from '@/components/AuroraScreen';
-import { GlassCard } from '@/components/GlassCard';
+import { ListRow } from '@/components/ListRow';
 import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
 import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
 import ProfileModal from '@/components/ProfileModal';
 import CityPickerModal from '@/components/CityPickerModal';
+import { RoundAction } from '@/components/RoundAction';
 import StylistModal from '@/components/StylistModal';
-import { Glass, Palette } from '@/constants/theme';
+import { STYLE_OPTIONS, TYPE_LABELS } from '@/constants/clothing';
+import { Palette } from '@/constants/theme';
 import MorningReminderModal from '@/features/notifications/MorningReminderModal';
 import { useHistory } from '@/hooks/useHistory';
 import { useProfile } from '@/hooks/useProfile';
@@ -26,15 +28,11 @@ import { weatherVisual } from '@/services/weatherIcon';
 import { findCalendarOccasion } from '@/services/calendarOccasion';
 import { updateDailyOutfitWidget } from '@/widgets/updateDailyOutfitWidget';
 import { loadFavorites, loadHistory, saveFavorites } from '@/storage/wardrobeStorage';
-import { loadComfortFeedback, loadLaundryThresholds, loadOutfitPreferences, recordOutfitPreference, saveComfortFeedback } from '@/storage/preferences';
-import type { Outfit, Style, Weather } from '@/types';
-
-const OCCASIONS: { key: Style; label: string }[] = [
-  { key: 'casual', label: 'Casual' },
-  { key: 'sport', label: 'Sport' },
-  { key: 'formel', label: 'Formel' },
-  { key: 'soiree', label: 'Soirée' },
-];
+import {
+  loadComfortFeedback, loadLaundryThresholds, loadOutfitPreferences, recordOutfitPreference, saveComfortFeedback,
+  type OutfitPreferences,
+} from '@/storage/preferences';
+import type { ComfortFeedback, Outfit, Style, Weather } from '@/types';
 
 const DAYS: { key: string; label: string }[] = [
   { key: '0', label: 'Aujourd’hui' },
@@ -64,12 +62,13 @@ export default function HomeScreen() {
   const [dayOffset, setDayOffset] = useState(0);
   const [calendarHint, setCalendarHint] = useState<Style | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [preferences, setPreferences] = useState<{ liked: Record<string, number>; rejected: Record<string, number> }>({ liked: {}, rejected: {} });
+  const [preferences, setPreferences] = useState<OutfitPreferences>({ liked: {}, rejected: {} });
   const [comfortBias, setComfortBias] = useState(0);
   const seenRef = useRef<Set<string>>(new Set());
   const deckRef = useRef<SwipeDeckHandle>(null);
   const hasWeatherRef = useRef(false);
   const calendarStyleRef = useRef<Style | null>(null);
+  const [scrollY] = useState(() => new Animated.Value(0));
 
   const { items, reload, setClean } = useWardrobe();
   const { entries: history, reload: reloadHistory, addWorn } = useHistory();
@@ -122,13 +121,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (dayOffset !== 0) return;
-    const labels: Record<string, string> = {
-      tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-      veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude', pantalon: 'Pantalon',
-      short: 'Short', jupe: 'Jupe', robe: 'Robe', chaussures: 'Chaussures',
-      echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
-    };
-    const outfitText = outfit?.items.slice(0, 4).map((item) => `${labels[item.type]} ${item.color}`).join(' · ') ?? '';
+    const outfitText = outfit?.items.slice(0, 4).map((item) => `${TYPE_LABELS[item.type]} ${item.color}`).join(' · ') ?? '';
     updateDailyOutfitWidget({
       city: weather?.city ?? '',
       temperature: weather ? `${Math.round(weather.temperature)}°` : '',
@@ -254,7 +247,7 @@ export default function HomeScreen() {
     const [thresholds, allHistory] = await Promise.all([loadLaundryThresholds(), loadHistory()]);
     const dirtyIds = outfit.items.filter((item) => allHistory.filter((entry) => entry.itemIds.includes(item.id) && entry.wornAt > (item.lastWashedAt ?? 0)).length >= thresholds[item.type]).map((item) => item.id);
     if (dirtyIds.length) await setClean(dirtyIds, false);
-    const recordFeedback = (comfort: 'too_hot' | 'good' | 'too_cold') => {
+    const recordFeedback = (comfort: ComfortFeedback) => {
       saveComfortFeedback({ wornAt: now, feedback: comfort, temperature: weather?.temperature ?? 20 }).catch(() => { });
       setComfortBias((bias) => Math.max(-5, Math.min(5, bias + (comfort === 'too_cold' ? -1 : comfort === 'too_hot' ? 1 : 0))));
     };
@@ -268,20 +261,23 @@ export default function HomeScreen() {
   // ---------- Rendu ----------
   if (loading) {
     return (
-      <AuroraScreen>
-        <View style={styles.center}><ActivityIndicator size="large" color={Palette.accent} /></View>
+      <AuroraScreen variant="hero">
+        <View style={styles.center}><ActivityIndicator size="large" color={Palette.white} /></View>
       </AuroraScreen>
     );
   }
   if (!weather) {
     return (
-      <AuroraScreen>
+      <AuroraScreen variant="hero">
         <View style={styles.center}>
+          <MaterialCommunityIcons name="weather-cloudy-alert" size={48} color={Palette.white} />
           <Text style={styles.error}>{error ?? 'Météo indisponible.'}</Text>
-          <Pressable style={styles.btn} onPress={loadWeather}>
-            <Text style={styles.btnText}>Réessayer</Text>
+          <Pressable style={styles.primaryBtn} onPress={loadWeather}>
+            <Text style={styles.primaryBtnText}>Réessayer</Text>
           </Pressable>
-          <Pressable onPress={() => setCityOpen(true)}><Text style={styles.link}>Choisir une ville manuellement</Text></Pressable>
+          <Pressable onPress={() => setCityOpen(true)} hitSlop={10}>
+            <Text style={styles.link}>Choisir une ville manuellement</Text>
+          </Pressable>
         </View>
         <CityPickerModal visible={cityOpen} onClose={() => setCityOpen(false)} onSelect={chooseCity} />
       </AuroraScreen>
@@ -291,123 +287,121 @@ export default function HomeScreen() {
   // Icône du temps (soleil, nuage, pluie...) d'après le code météo
   const visual = weatherVisual(weather.weatherCode, weather.isDay ?? true);
 
-  // Température affichée selon l'unité choisie dans le profil
-  const shownTemp = profile.unit === 'F'
-    ? Math.round(weather.temperature * 9 / 5 + 32)
-    : Math.round(weather.temperature);
+  // Températures affichées selon l'unité choisie dans le profil
+  const toUnit = (t: number) => Math.round(profile.unit === 'F' ? t * 9 / 5 + 32 : t);
+  const feels = weather.apparentTemperature ?? weather.temperature;
+  const low = weather.minTemperature ?? weather.temperature;
+  const high = weather.maxTemperature ?? weather.temperature;
+  const advice = weather.rainTime
+    ? `Prends une veste légère : pluie vers ${weather.rainTime}.`
+    : low < 12 ? 'Prends une veste chaude pour ce matin.'
+      : high > 22 ? 'Une tenue légère devrait suffire cet après-midi.'
+        : 'Une veste légère peut être utile ce matin.';
+  const dayTitle = dayOffset === 0 ? 'Ta tenue du jour' : dayOffset === 1 ? 'Ta tenue de demain' : 'Ta tenue d’après-demain';
 
   return (
-    <AuroraScreen>
-      <ScrollView contentContainerStyle={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.accent} />}>
-        {error && <Text style={styles.softError}>{error}</Text>}
-        {/* En-tête : ville à gauche, cloche puis profil à droite */}
-        <View style={styles.headerTop}>
-          <View style={styles.cityChip}>
-            <MaterialCommunityIcons name="map-marker" size={16} color={Palette.accent} />
-            <Text style={styles.cityText}>{weather.city ?? 'Ma position'}</Text>
-          </View>
+    <AuroraScreen variant="hero" scrollY={scrollY}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Palette.white} />}
+      >
+        {/* En-tête : profil, recherche de ville, rappel et favoris */}
+        <View style={styles.header}>
+          <Pressable style={styles.avatarBtn} onPress={() => setProfileOpen(true)} accessibilityLabel="Mon profil">
+            {profile.avatar
+              ? <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+              : <MaterialCommunityIcons name="account" size={26} color={Palette.white} />}
+          </Pressable>
+          <Pressable style={styles.search} onPress={() => setCityOpen(true)} accessibilityLabel="Changer de ville">
+            <MaterialCommunityIcons name="magnify" size={22} color={Palette.white} />
+            <Text style={styles.searchText} numberOfLines={1}>Ville</Text>
+          </Pressable>
+          <Pressable style={styles.iconBtn} onPress={() => setReminderOpen(true)} hitSlop={6} accessibilityLabel="Rappel du matin">
+            <MaterialCommunityIcons name="bell" size={21} color={Palette.white} />
+          </Pressable>
+          <Pressable style={styles.iconBtn} onPress={() => router.push('/outfits')} hitSlop={6} accessibilityLabel="Mes tenues">
+            <MaterialCommunityIcons name="star" size={21} color={Palette.white} />
+          </Pressable>
+        </View>
 
-          <View style={styles.actions}>
-            <Pressable style={styles.iconBtn} onPress={() => setReminderOpen(true)} hitSlop={10} accessibilityLabel="Rappel du matin">
-              <MaterialCommunityIcons name="bell-outline" size={22} color={Palette.text} />
-            </Pressable>
-            <Pressable style={styles.iconBtn} onPress={() => setProfileOpen(true)} hitSlop={10} accessibilityLabel="Mon profil">
-              {profile.avatar
-                ? <Image source={{ uri: profile.avatar }} style={styles.avatar} />
-                : <MaterialCommunityIcons name="account-outline" size={24} color={Palette.text} />}
-            </Pressable>
+        {error && <Text style={styles.softError}>{error}</Text>}
+
+        {/* Grande température au centre, comme un solde */}
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel} numberOfLines={1}>{weather.city?.split(',')[0] ?? 'Ma position'} · {visual.label}</Text>
+          <View style={styles.heroTempRow}>
+            <Text style={styles.heroTemp} numberOfLines={1} adjustsFontSizeToFit>{toUnit(weather.temperature)}</Text>
+            <Text style={styles.heroUnit}>°{profile.unit}</Text>
+          </View>
+          <View style={styles.heroPill}>
+            <MaterialCommunityIcons name={visual.name} size={18} color={Palette.white} />
+            <Text style={styles.heroPillText}>Ressenti {toUnit(feels)}°</Text>
           </View>
         </View>
-        <Pressable style={styles.changeCity} onPress={() => setCityOpen(true)}>
-          <MaterialCommunityIcons name="map-search-outline" size={16} color={Palette.accent} />
-          <Text style={styles.changeCityText}>Changer de ville</Text>
-        </Pressable>
 
-        {/* Température + infos météo dans une carte liquid glass */}
-        <GlassCard>
-          <View style={styles.tempRow}>
-            <Text style={styles.temp} numberOfLines={1} adjustsFontSizeToFit>
-              {shownTemp}°
-            </Text>
-            <View style={styles.stats}>
-              <View style={styles.statRow}>
-                <MaterialCommunityIcons name="water-outline" size={22} color={Palette.accent} />
-                <Text style={styles.statText}>Pluie {weather.precipitation} mm</Text>
-              </View>
-              <View style={styles.statRow}>
-                <MaterialCommunityIcons name="weather-windy" size={22} color={Palette.accent} />
-                <Text style={styles.statText}>Vent {Math.round(weather.windSpeed)} km/h</Text>
-              </View>
-            </View>
-            <MaterialCommunityIcons name={visual.name} size={56} color={visual.color} accessibilityLabel={visual.label} />
-          </View>
-          <Text style={styles.forecastLine}>
-            {weather.minTemperature !== undefined && weather.maxTemperature !== undefined
-              ? `${Math.round(weather.minTemperature)}° ce matin · ${Math.round(weather.maxTemperature)}° cet après-midi · ressenti ${Math.round(weather.apparentTemperature ?? weather.temperature)}°${weather.rainTime ? ` · pluie vers ${weather.rainTime}` : ''}`
-              : `Ressenti ${Math.round(weather.apparentTemperature ?? weather.temperature)}°${weather.rainTime ? ` · pluie vers ${weather.rainTime}` : ''}`}
+        {/* Actions rapides */}
+        <View style={styles.actionsRow}>
+          <RoundAction icon="creation" label="Styliste" onPress={() => setStylistOpen(true)} />
+          <RoundAction icon="check" label="Je la porte" onPress={markWorn} disabled={!outfit} />
+          <RoundAction icon="autorenew" label="Nouvelle série" onPress={resetDeck} />
+          <RoundAction icon="undo-variant" label="Annuler" onPress={undo} disabled={!lastAction} />
+        </View>
+
+        <AnimatedSegmented options={DAYS} value={String(dayOffset)} onChange={(key) => setDayOffset(Number(key))} />
+        <AnimatedSegmented options={STYLE_OPTIONS} value={occasion} onChange={setOccasion} />
+        {profile.calendarEnabled && calendarHint && (
+          <Text style={styles.calendarHint}>
+            Occasion détectée dans ton calendrier · {STYLE_OPTIONS.find((item) => item.key === calendarHint)?.label}
           </Text>
-          <Text style={styles.weatherAdvice}>{weather.rainTime ? `Prends une veste légère : pluie vers ${weather.rainTime}.` : (weather.minTemperature ?? weather.temperature) < 12 ? 'Prends une veste chaude pour ce matin.' : (weather.maxTemperature ?? weather.temperature) > 22 ? 'Une tenue légère devrait suffire cet après-midi.' : 'Une veste légère peut être utile ce matin.'}</Text>
-        </GlassCard>
+        )}
 
-        <AnimatedSegmented
-          options={DAYS}
-          value={String(dayOffset)}
-          onChange={(key) => setDayOffset(Number(key))}
-        />
+        {/* Détail de la météo, présenté comme une liste d'opérations */}
+        <View style={styles.listCard}>
+          <ListRow
+            icon="thermometer"
+            tint={Tints.temperature}
+            title="Températures"
+            subtitle="Matin · après-midi"
+            value={`${toUnit(low)}° / ${toUnit(high)}°`}
+          />
+          <ListRow
+            icon="weather-pouring"
+            tint={Tints.rain}
+            title="Pluie"
+            subtitle={weather.rainTime ? `Vers ${weather.rainTime}` : 'Pas de pluie prévue'}
+            value={`${weather.precipitation} mm`}
+          />
+          <ListRow
+            icon="weather-windy"
+            tint={Tints.wind}
+            title="Vent"
+            subtitle={weather.windSpeed > 30 ? 'Fort, couvre-toi' : 'Calme'}
+            value={`${Math.round(weather.windSpeed)} km/h`}
+          />
+          <ListRow icon="lightbulb-on" tint={Tints.advice} title="Conseil" subtitle={advice} />
+        </View>
 
-        {/* Occasion : sélecteur en verre */}
-        <AnimatedSegmented options={OCCASIONS} value={occasion} onChange={setOccasion} />
-        {profile.calendarEnabled && calendarHint && <Text style={styles.calendarHint}>Occasion détectée dans ton calendrier · {OCCASIONS.find((item) => item.key === calendarHint)?.label}</Text>}
-
-        <Pressable style={styles.stylistButton} onPress={() => setStylistOpen(true)}>
-          <MaterialCommunityIcons name="creation" size={19} color={Palette.accent} />
-          <Text style={styles.stylistButtonText}>Demander au styliste</Text>
-          <MaterialCommunityIcons name="chevron-right" size={19} color={Palette.textSecondary} />
-        </Pressable>
-
-        <Text style={styles.title}>
-          {`${dayOffset === 0 ? 'Ta tenue du jour' : dayOffset === 1 ? 'Ta tenue de demain' : 'Ta tenue d’après-demain'}${profile.name ? `, ${profile.name}` : ''}`}
-        </Text>
+        <Text style={styles.sectionTitle}>{dayTitle}{profile.name ? `, ${profile.name}` : ''}</Text>
 
         {outfit ? (
           <>
-            <OutfitSwipeDeck
-              ref={deckRef}
-              outfit={outfit}
-              hasNext={queue.length > 1}
-              onSwipe={handleSwipe}
-            />
-            <Text style={styles.swipeHint}>Glisse à droite pour garder · à gauche pour passer</Text>
-
-            <View style={styles.actionRow}>
-              <Pressable
-                style={styles.sideBtn}
-                onPress={() => deckRef.current?.swipe('left')}
-                accessibilityLabel="Passer cette tenue"
-              >
-                <MaterialCommunityIcons name="close" size={24} color={Palette.text} />
+            <OutfitSwipeDeck ref={deckRef} outfit={outfit} hasNext={queue.length > 1} onSwipe={handleSwipe} />
+            <View style={styles.swipeRow}>
+              <Pressable style={styles.swipeBtn} onPress={() => deckRef.current?.swipe('left')} accessibilityLabel="Passer cette tenue">
+                <MaterialCommunityIcons name="close" size={26} color={Palette.text} />
               </Pressable>
-              <Pressable style={styles.wornBtn} onPress={markWorn}>
-                <Text style={styles.wornText}>Je la porte</Text>
-              </Pressable>
+              <Text style={styles.swipeHint}>Glisse pour trier</Text>
               <Pressable
-                style={[styles.sideBtn, styles.keepBtn]}
+                style={[styles.swipeBtn, styles.keepBtn]}
                 onPress={() => deckRef.current?.swipe('right')}
                 accessibilityLabel="Garder cette tenue en favori"
               >
-                <MaterialCommunityIcons name="heart" size={24} color={Palette.onAccent} />
+                <MaterialCommunityIcons name="heart" size={26} color={Palette.onAccent} />
               </Pressable>
             </View>
-
-            <Pressable
-              style={[styles.undo, !lastAction && styles.disabled]}
-              onPress={undo}
-              disabled={!lastAction}
-              accessibilityLabel="Annuler le dernier swipe"
-            >
-              <MaterialCommunityIcons name="undo-variant" size={16} color={Palette.textSecondary} />
-              <Text style={styles.undoText}>Annuler le dernier swipe</Text>
-            </Pressable>
           </>
         ) : (
           <View style={styles.emptyBox}>
@@ -415,18 +409,12 @@ export default function HomeScreen() {
             <Text style={styles.emptyText}>
               Plus de tenue à proposer. Ajoute des vêtements, lave ceux qui sont sales, ou revois les tenues déjà passées.
             </Text>
-            <Pressable style={styles.btn} onPress={resetDeck}>
-              <MaterialCommunityIcons name="autorenew" size={18} color={Palette.onAccent} />
-              <Text style={styles.btnText}>Revoir les tenues</Text>
+            <Pressable style={styles.primaryBtn} onPress={resetDeck}>
+              <Text style={styles.primaryBtnText}>Revoir les tenues</Text>
             </Pressable>
-            {lastAction && (
-              <Pressable onPress={undo} hitSlop={10}>
-                <Text style={styles.link}>Annuler le dernier swipe</Text>
-              </Pressable>
-            )}
           </View>
         )}
-      </ScrollView>
+      </Animated.ScrollView>
 
       <MorningReminderModal visible={reminderOpen} onClose={() => setReminderOpen(false)} />
       <ProfileModal
@@ -442,69 +430,64 @@ export default function HomeScreen() {
   );
 }
 
+// Pastilles colorées des lignes météo
+const Tints = {
+  temperature: '#A8735A',
+  rain: '#3B82F6',
+  wind: '#1FBF8F',
+  advice: '#7C5CFF',
+};
+
 const styles = StyleSheet.create({
-  softError: { color: Palette.danger, backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: 10, padding: 8 },
-  changeCity: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: -12, marginLeft: 4 },
-  changeCityText: { color: Palette.accent, fontSize: 13, fontWeight: '700' },
-  forecastLine: { marginTop: 12, color: Palette.textSecondary, fontWeight: '600', fontSize: 13 },
-  weatherAdvice: { marginTop: 5, color: Palette.text, fontSize: 13, fontWeight: '700' },
-  daySelector: { ...Glass, flexDirection: 'row', padding: 4, borderRadius: 18, marginTop: -4 },
-  calendarHint: { color: Palette.accent, fontSize: 12, fontWeight: '700', marginTop: -10 },
-  stylistButton: { ...Glass, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 16 },
-  stylistButtonText: { flex: 1, color: Palette.text, fontWeight: '700' },
-  dayOption: { flex: 1, alignItems: 'center', borderRadius: 14, paddingVertical: 10 },
-  dayActive: { backgroundColor: Palette.ink },
-  dayText: { color: Palette.textSecondary, fontWeight: '700', fontSize: 12 },
-  dayTextActive: { color: Palette.onAccent },
-  container: { padding: 20, gap: 16, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 },
+  container: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 140, gap: 18 }, // marge basse : barre d'onglets
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 14 },
   error: { fontSize: 16, textAlign: 'center', color: Palette.text },
+  softError: { color: Palette.white, backgroundColor: 'rgba(255,107,122,0.25)', borderRadius: 14, padding: 10, overflow: 'hidden' },
+  link: { color: Palette.white, fontWeight: '600', textDecorationLine: 'underline' },
 
-  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cityChip: {
-    ...Glass, flexDirection: 'row', alignItems: 'center', gap: 6,
-    borderRadius: 20, paddingHorizontal: 12, paddingVertical: 7,
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatarBtn: {
+    width: 48, height: 48, borderRadius: 24, overflow: 'hidden',
+    backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center',
   },
-  cityText: { fontSize: 13, fontWeight: '700', color: Palette.text },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatar: { width: 48, height: 48 },
+  search: {
+    flex: 1, height: 48, borderRadius: 24, paddingHorizontal: 14, gap: 8,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: Palette.overlay,
+  },
+  searchText: { flex: 1, color: 'rgba(255,255,255,0.75)', fontSize: 15, fontWeight: '500' },
   iconBtn: {
-    ...Glass, width: 40, height: 40, borderRadius: 20, overflow: 'hidden',
-    alignItems: 'center', justifyContent: 'center',
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center',
   },
-  avatar: { width: 40, height: 40 },
 
-  tempRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  temp: { flexShrink: 1, fontSize: 84, lineHeight: 90, fontWeight: '800', letterSpacing: -3, color: Palette.text },
-  stats: { gap: 12 },
-  statRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  statText: { fontSize: 17, fontWeight: '700', color: Palette.textSecondary },
+  hero: { alignItems: 'center', paddingTop: 56, paddingBottom: 40, gap: 6 },
+  heroLabel: { color: Palette.white, fontSize: 17, fontWeight: '500', opacity: 0.9 },
+  heroTempRow: { flexDirection: 'row', alignItems: 'flex-end' },
+  heroTemp: { color: Palette.white, fontSize: 84, lineHeight: 92, fontWeight: '700', letterSpacing: -2 },
+  heroUnit: { color: Palette.white, fontSize: 30, fontWeight: '700', marginBottom: 14, marginLeft: 4 },
+  heroPill: {
+    marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999, backgroundColor: Palette.overlay,
+  },
+  heroPillText: { color: Palette.white, fontSize: 16, fontWeight: '600' },
 
-  segmented: { ...Glass, flexDirection: 'row', borderRadius: 22, padding: 4 },
-  segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 18 },
-  segmentActive: { backgroundColor: Palette.ink },
-  segmentText: { color: Palette.textSecondary, fontWeight: '700', fontSize: 13 },
-  segmentTextActive: { color: Palette.onAccent, fontWeight: '700', fontSize: 13 },
+  actionsRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
+  calendarHint: { color: Palette.accent, fontSize: 13, fontWeight: '600', marginTop: -8, textAlign: 'center' },
 
-  title: { fontSize: 22, fontWeight: '800', color: Palette.text, letterSpacing: -0.4 },
-  swipeHint: { color: Palette.textSecondary, textAlign: 'center', fontSize: 13 },
+  listCard: { backgroundColor: Palette.surface, borderRadius: 28, paddingHorizontal: 18, paddingVertical: 8 },
 
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  sideBtn: { ...Glass, width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  keepBtn: { backgroundColor: Palette.accent, borderColor: Palette.accent },
-  wornBtn: { flex: 1, height: 56, borderRadius: 28, backgroundColor: Palette.ink, alignItems: 'center', justifyContent: 'center' },
-  wornText: { color: Palette.onAccent, fontSize: 16, fontWeight: '800' },
-  undo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 4 },
-  undoText: { color: Palette.textSecondary, fontSize: 13, fontWeight: '600' },
-  disabled: { opacity: 0.35 },
+  sectionTitle: { fontSize: 22, fontWeight: '700', color: Palette.text, letterSpacing: -0.4, marginTop: 6 },
+  swipeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },
+  swipeBtn: {
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: Palette.surface, alignItems: 'center', justifyContent: 'center',
+  },
+  keepBtn: { backgroundColor: Palette.accent },
+  swipeHint: { color: Palette.textSecondary, fontSize: 13 },
 
-  emptyBox: { alignItems: 'center', gap: 12, paddingVertical: 24 },
+  emptyBox: { alignItems: 'center', gap: 14, paddingVertical: 28, paddingHorizontal: 16, backgroundColor: Palette.surface, borderRadius: 28 },
   emptyText: { color: Palette.textSecondary, textAlign: 'center' },
-  link: { color: Palette.accent, fontWeight: '600' },
-  btn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 13, borderRadius: 16,
-  },
-  btnText: { color: Palette.onAccent, fontWeight: '600' },
+  primaryBtn: { backgroundColor: Palette.white, paddingHorizontal: 22, paddingVertical: 14, borderRadius: 999 },
+  primaryBtnText: { color: Palette.black, fontWeight: '700', fontSize: 15 },
 });
-
-// ajout accessoir + diff entre haut et bas sur une photo 

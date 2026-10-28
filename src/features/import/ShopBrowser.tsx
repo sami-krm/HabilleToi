@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, StyleSheet, Text, View, Keyboard, AppState } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, Keyboard, AppState } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import { Palette } from '@/constants/theme';

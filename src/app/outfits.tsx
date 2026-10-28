@@ -41,8 +41,8 @@ export default function OutfitsScreen() {
 }
 
 const styles = StyleSheet.create({
-  segmented: { ...Glass, flexDirection: 'row', borderRadius: 22, padding: 4, marginHorizontal: 20, marginTop: 16 },
-  segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 18 },
+  segmented: { ...Glass, flexDirection: 'row', borderRadius: 999, padding: 4, marginHorizontal: 16, marginTop: 16 },
+  segment: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 999 },
   segmentActive: { backgroundColor: Palette.ink },
   segmentText: { color: Palette.textSecondary, fontWeight: '700' },
   segmentTextActive: { color: Palette.onAccent },

@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   title: { color: Palette.text, fontSize: 23, fontWeight: '800' },
   spinner: { marginTop: 80 }, error: { margin: 24, color: Palette.textSecondary },
   list: { paddingHorizontal: 18, paddingBottom: 40, gap: 12 },
-  card: { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: 18, padding: 14, gap: 10 },
+  card: { backgroundColor: Palette.surfaceRaised, borderRadius: 18, padding: 14, gap: 10 },
   dayRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   day: { color: Palette.text, fontWeight: '800', textTransform: 'capitalize' }, temps: { color: Palette.textSecondary, fontWeight: '700' },
   items: { flexDirection: 'row', gap: 8 }, image: { width: 58, height: 58, borderRadius: 12, backgroundColor: Palette.surfaceRaised },

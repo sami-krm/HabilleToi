@@ -5,19 +5,13 @@ import {
 } from 'react-native';
 
 import AuroraScreen from '@/components/AuroraScreen';
+import { STYLE_OPTIONS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import { addDaysISO, todayISO } from '@/services/tripDates';
 import { searchPlaces } from '@/services/tripWeather';
 import type { Style } from '@/types';
 import RangeCalendar from './RangeCalendar';
 import type { Place } from './tripTypes';
-
-const OCCASIONS: { key: Style; label: string }[] = [
-  { key: 'casual', label: 'Casual' },
-  { key: 'sport', label: 'Sport' },
-  { key: 'formel', label: 'Formel' },
-  { key: 'soiree', label: 'Soirée' },
-];
 
 const MAX_DAYS = 21;    // durée maximale d'un séjour
 const MAX_OFFSET = 365; // départ au plus tard dans un an
@@ -128,7 +122,7 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
 
         <Text style={styles.label}>Occasions</Text>
         <View style={styles.chips}>
-          {OCCASIONS.map((o) => {
+          {STYLE_OPTIONS.map((o) => {
             const active = occasions.includes(o.key);
             return (
               <Pressable key={o.key} onPress={() => toggleOccasion(o.key)} style={[styles.chip, active && styles.chipActive]}>

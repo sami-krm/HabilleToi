@@ -20,6 +20,7 @@ function loadWidget() {
   try {
     // require paresseux : le module natif n'est cherché qu'à cet instant,
     // pas au démarrage de l'app (contrairement à un import en haut de fichier).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     widget = require('./DailyOutfitWidget').default;
   } catch (error) {
     console.warn('Widget iOS indisponible :', error);

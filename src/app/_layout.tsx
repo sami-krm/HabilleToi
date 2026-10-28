@@ -1,4 +1,4 @@
-import { DefaultTheme, ThemeProvider } from 'expo-router';
+import { DarkTheme, ThemeProvider } from 'expo-router';
 import { useLifecycleLog } from '@/utils/lifecycleLog';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -13,13 +13,14 @@ import { useOnboardingGate } from '@/features/onboarding/useOnboardingGate';
 
 SplashScreen.preventAutoHideAsync();
 
-// Thème de navigation clair, aux couleurs de l'app
+// Thème de navigation sombre, aux couleurs de l'app
 const navTheme = {
-  ...DefaultTheme,
+  ...DarkTheme,
   colors: {
-    ...DefaultTheme.colors,
+    ...DarkTheme.colors,
     background: Palette.background,
     card: Palette.background,
+    border: Palette.border,
     text: Palette.text,
     primary: Palette.accent,
   },
@@ -33,7 +34,7 @@ export default function TabLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={navTheme}>
         <AnimatedSplashOverlay />
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         {!ready ? <LoadingScreen /> : done ? <AppTabs /> : <OnboardingFlow onFinish={finish} />}
       </ThemeProvider>
     </GestureHandlerRootView>

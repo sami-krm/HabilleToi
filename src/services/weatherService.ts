@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
+import type { Place } from '@/features/trip/tripTypes';
+import { searchPlaces } from '@/services/tripWeather';
 import type { Weather } from '../types';
 
 const LOCATION_KEY = '@app/weather-location';
@@ -19,13 +21,10 @@ export async function saveLocation(location: SavedLocation | null): Promise<void
 }
 
 export async function searchCities(query: string): Promise<SavedLocation[]> {
-  const q = query.trim();
-  if (q.length < 2) return [];
-  const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=fr&format=json`);
-  if (!response.ok) throw new WeatherError('NETWORK', 'Recherche de ville indisponible.');
-  const data = await response.json() as { results?: { name: string; admin1?: string; country?: string; latitude: number; longitude: number }[] };
-  return (data.results ?? []).map((p) => ({
-    name: [p.name, p.admin1, p.country].filter(Boolean).join(', '), latitude: p.latitude, longitude: p.longitude,
+  let places: Place[];
+  try { places = await searchPlaces(query); } catch { throw new WeatherError('NETWORK', 'Recherche de ville indisponible.'); }
+  return places.map((p) => ({
+    name: [p.name, p.region, p.country].filter(Boolean).join(', '), latitude: p.latitude, longitude: p.longitude,
   }));
 }
 
@@ -41,23 +40,32 @@ export async function getWeatherAt(latitude: number, longitude: number, city?: s
     data = await response.json();
   } catch { throw new WeatherError('NETWORK', 'Impossible de récupérer la météo (connexion ?).'); }
   const dayIndex = Math.min(Math.max(dayOffset, 0), data.daily.time.length - 1);
+  const today = dayIndex === 0;
   const wantedDate = data.daily.time[dayIndex] as string;
-  const hourlyIndices = (data.hourly.time as string[]).map((time, index) => ({ time, index })).filter(({ time }) => time.startsWith(wantedDate));
-  const peak = hourlyIndices.reduce((best, entry) => {
-    return Number(data.hourly.precipitation_probability[entry.index] ?? 0) > Number(data.hourly.precipitation_probability[best.index] ?? 0) ? entry : best;
-  }, hourlyIndices[0] ?? { time: '', index: 0 });
-  const wetHour = hourlyIndices.find(({ index }) => Number(data.hourly.precipitation[index] ?? 0) > 0.05)
-    ?? hourlyIndices.find(({ index }) => Number(data.hourly.precipitation_probability[index] ?? 0) >= 50)
-    ?? peak;
-  const selectedTemp = dayIndex === 0 ? Number(data.current.temperature_2m) : Number(data.hourly.temperature_2m[hourlyIndices.find(({ time }) => Number(time.slice(11, 13)) >= 9)?.index ?? 0]);
+  const hourly = data.hourly;
+  const rainChance = (i: number) => Number(hourly.precipitation_probability[i] ?? 0);
+  const rainAmount = (i: number) => Number(hourly.precipitation[i] ?? 0);
+
+  const hours = (hourly.time as string[]).map((time, index) => ({ time, index })).filter(({ time }) => time.startsWith(wantedDate));
+  const peak = hours.reduce((best, h) => (rainChance(h.index) > rainChance(best.index) ? h : best), hours[0] ?? { time: '', index: 0 });
+  const wetHour = hours.find(({ index }) => rainAmount(index) > 0.05) ?? hours.find(({ index }) => rainChance(index) >= 50) ?? peak;
+  // Pour un autre jour qu'aujourd'hui, on prend la météo du matin (9 h)
+  const morning = hours.find(({ time }) => Number(time.slice(11, 13)) >= 9)?.index ?? 0;
+  const daySum = Number(data.daily.precipitation_sum[dayIndex] ?? 0);
+  const rainy = daySum > 0.2 && (rainAmount(wetHour.index) > 0 || rainChance(wetHour.index) >= 50);
+
   return {
-    temperature: selectedTemp,
-    precipitation: dayIndex === 0 ? Number(data.current.precipitation) : Number(data.daily.precipitation_sum[dayIndex] ?? 0),
-    windSpeed: Number(data.current.wind_speed_10m), weatherCode: Number(data.daily.weather_code[dayIndex]),
-    isDay: data.current.is_day === 1, city, date: wantedDate,
-    minTemperature: Number(data.daily.temperature_2m_min[dayIndex]), maxTemperature: Number(data.daily.temperature_2m_max[dayIndex]),
-    apparentTemperature: dayIndex === 0 ? Number(data.current.apparent_temperature) : Number(data.hourly.apparent_temperature[hourlyIndices.find(({ time }) => Number(time.slice(11, 13)) >= 9)?.index ?? 0]),
-    rainTime: Number(data.daily.precipitation_sum[dayIndex] ?? 0) > 0.2 && (Number(data.hourly.precipitation[wetHour.index] ?? 0) > 0 || Number(data.hourly.precipitation_probability[wetHour.index] ?? 0) >= 50) ? wetHour.time.slice(11, 16) : undefined,
+    temperature: today ? Number(data.current.temperature_2m) : Number(hourly.temperature_2m[morning]),
+    precipitation: today ? Number(data.current.precipitation) : daySum,
+    windSpeed: Number(data.current.wind_speed_10m),
+    weatherCode: Number(data.daily.weather_code[dayIndex]),
+    isDay: data.current.is_day === 1,
+    city,
+    date: wantedDate,
+    minTemperature: Number(data.daily.temperature_2m_min[dayIndex]),
+    maxTemperature: Number(data.daily.temperature_2m_max[dayIndex]),
+    apparentTemperature: today ? Number(data.current.apparent_temperature) : Number(hourly.apparent_temperature[morning]),
+    rainTime: rainy ? wetHour.time.slice(11, 16) : undefined,
     latitude, longitude,
   };
 }

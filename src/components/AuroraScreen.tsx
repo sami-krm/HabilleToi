@@ -1,15 +1,22 @@
 import type { ReactNode } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { type Animated, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AuroraBackground from '@/components/AuroraBackground';
 import { Palette } from '@/constants/theme';
 
-/** Écran avec le fond aurore derrière le contenu. */
-export default function AuroraScreen({ children }: { children: ReactNode }) {
+/** Écran sombre avec le dégradé violet derrière le contenu. */
+interface Props {
+  children: ReactNode;
+  variant?: 'hero' | 'soft';
+  scrollY?: Animated.Value;
+}
+
+export default function AuroraScreen({ children, variant, scrollY }: Props) {
   return (
     <View style={styles.root}>
-      <AuroraBackground />
-      <SafeAreaView style={styles.safe}>{children}</SafeAreaView>
+      <AuroraBackground variant={variant} scrollY={scrollY} />
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>{children}</SafeAreaView>
     </View>
   );
 }

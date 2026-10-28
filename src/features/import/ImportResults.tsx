@@ -1,13 +1,15 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Palette } from '@/constants/theme';
 import { analyzeProduct, type ProductVerdict } from '@/services/clothingRecognition';
+import { COLOR_HEX, COLOR_ORDER, TYPE_LABELS, TYPE_ORDER } from '@/constants/clothing';
 import {
-  COLOR_HEX, COLOR_ORDER, TYPE_LABELS, TYPE_ORDER, normalize, urlToBase64, type FoundItem,
+  normalize, urlToBase64, type FoundItem,
 } from './importUtils';
 
 type Analysis = 'pending' | 'done' | 'skipped' | 'failed';

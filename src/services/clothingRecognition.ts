@@ -1,3 +1,4 @@
+import { COLOR_ORDER, STYLE_ORDER, TYPE_ORDER } from '@/constants/clothing';
 import type { ClothingType, ColorName, Style } from '@/types';
 
 export interface Suggestion {
@@ -7,15 +8,6 @@ export interface Suggestion {
   styles?: Style[];
 }
 
-const TYPES: ClothingType[] = [
-  'tshirt', 'chemise', 'pull', 'veste', 'veste_legere', 'veste_epaisse',
-  'pantalon', 'short', 'jupe', 'robe', 'chaussures', 'echarpe', 'bonnet', 'parapluie',
-];
-const COLORS: ColorName[] = [
-  'noir', 'blanc', 'gris', 'beige', 'marine', 'marron',
-  'bleu', 'rouge', 'vert', 'jaune', 'orange', 'rose', 'violet',
-];
-const STYLES: Style[] = ['casual', 'sport', 'formel', 'soiree'];
 const MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_COLORS = 3;
 
@@ -38,16 +30,16 @@ function parseJson(text: string): any | null {
 /** Ne garde que des valeurs reconnues par l'app ; null si rien d'exploitable (= pas un vêtement). */
 function toSuggestion(raw: any): Suggestion | null {
   const suggestion: Suggestion = {};
-  if (TYPES.includes(raw.type)) suggestion.type = raw.type;
+  if (TYPE_ORDER.includes(raw.type)) suggestion.type = raw.type;
 
   // Accepte "colors" (liste) ou, par sécurité, l'ancien champ "color" (texte)
   const rawColors: unknown[] = Array.isArray(raw.colors) ? raw.colors : raw.color ? [raw.color] : [];
-  const colors = [...new Set(rawColors.filter((c): c is ColorName => COLORS.includes(c as ColorName)))];
+  const colors = [...new Set(rawColors.filter((c): c is ColorName => COLOR_ORDER.includes(c as ColorName)))];
   if (colors.length > 0) suggestion.colors = colors.slice(0, MAX_COLORS);
 
   if (raw.pattern === 'uni' || raw.pattern === 'motif') suggestion.pattern = raw.pattern;
   if (Array.isArray(raw.styles)) {
-    const valid = raw.styles.filter((s: any) => STYLES.includes(s));
+    const valid = raw.styles.filter((s: any) => STYLE_ORDER.includes(s));
     if (valid.length > 0) suggestion.styles = valid;
   }
   return Object.keys(suggestion).length > 0 ? suggestion : null;

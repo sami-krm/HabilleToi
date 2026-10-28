@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ColdLevel = 'frileux' | 'normal' | 'chaud';
 
@@ -26,19 +26,23 @@ export const DEFAULT_PROFILE: Profile = {
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile>(DEFAULT_PROFILE);
+  const profileRef = useRef(DEFAULT_PROFILE);
 
   useEffect(() => {
     AsyncStorage.getItem(KEY)
-      .then((v) => v && setProfile({ ...DEFAULT_PROFILE, ...JSON.parse(v) }))
+      .then((v) => {
+        if (!v) return;
+        profileRef.current = { ...DEFAULT_PROFILE, ...JSON.parse(v) };
+        setProfile(profileRef.current);
+      })
       .catch(() => {});
   }, []);
 
   const update = useCallback((patch: Partial<Profile>) => {
-    setProfile((prev) => {
-      const next = { ...prev, ...patch };
-      AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {});
-      return next;
-    });
+    const next = { ...profileRef.current, ...patch };
+    profileRef.current = next;
+    setProfile(next);
+    AsyncStorage.setItem(KEY, JSON.stringify(next)).catch(() => {});
   }, []);
 
   return { profile, update };

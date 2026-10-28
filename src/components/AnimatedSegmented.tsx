@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
-import { type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import { type LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolateColor,
   type SharedValue,
@@ -82,9 +82,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: PADDING,
     borderRadius: 999,
-    backgroundColor: Palette.surfaceRaised,
-    borderWidth: 1,
-    borderColor: Palette.border,
+    backgroundColor: Palette.surface,
   },
   pill: {
     position: 'absolute',

@@ -1,74 +1,33 @@
-import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
-    ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AuroraScreen from '@/components/AuroraScreen';
+import { RoundAction } from '@/components/RoundAction';
+import {
+  COLOR_HEX, COLOR_ORDER, isJacket, STYLE_OPTIONS, TYPE_LABELS, TYPE_ORDER, TYPE_PLURALS,
+} from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import ImportFromShopButton from '@/features/import/ImportFromShopButton';
 import { useWardrobe } from '@/hooks/useWardrobe';
+import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { loadHistory } from '@/storage/wardrobeStorage';
 import { recognizeClothing } from '@/services/clothingRecognition';
 import { removeClothingBackground } from '@/services/backgroundRemoval';
-import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
-import { allColors } from '@/types';
-
-// import DemoDataButton from '@/features/dev/DemoDataButton';
+import { allColors, type ClothingItem, type ClothingType, type ColorName, type Style } from '@/types';
 
 // ---------- Données d'affichage ----------
-const TYPES: { key: ClothingType; label: string }[] = [
-  { key: 'tshirt', label: 'T-shirt' },
-  { key: 'chemise', label: 'Chemise' },
-  { key: 'pull', label: 'Pull' },
-  { key: 'veste', label: 'Veste' },
-  { key: 'veste_legere', label: 'Veste légère' },
-  { key: 'veste_epaisse', label: 'Veste chaude' },
-  { key: 'pantalon', label: 'Pantalon' },
-  { key: 'short', label: 'Short' },
-  { key: 'jupe', label: 'Jupe' },
-  { key: 'robe', label: 'Robe' },
-  { key: 'chaussures', label: 'Chaussures' },
-  { key: 'echarpe', label: 'Écharpe' },
-  { key: 'bonnet', label: 'Bonnet' },
-  { key: 'parapluie', label: 'Parapluie' },
-];
-
-const STYLES: { key: Style; label: string }[] = [
-  { key: 'casual', label: 'Casual' },
-  { key: 'sport', label: 'Sport' },
-  { key: 'formel', label: 'Formel' },
-  { key: 'soiree', label: 'Soirée' },
-];
-
-const COLORS: Record<ColorName, string> = {
-  noir: '#111111', blanc: '#FFFFFF', gris: '#9E9E9E', beige: '#D8C3A5',
-  marine: '#1F2A44', marron: '#6B4423', bleu: '#2F6FED', rouge: '#D32F2F',
-  vert: '#2E8B57', jaune: '#F4C430', orange: '#F57C00', rose: '#F48FB1', violet: '#7E57C2',
-};
-
 // Onglets de catégories (libellés au pluriel)
 type Category = ClothingType | 'all';
 const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'all', label: 'Tous' },
-  { key: 'tshirt', label: 'T-shirts' },
-  { key: 'chemise', label: 'Chemises' },
-  { key: 'pull', label: 'Pulls' },
-  { key: 'veste', label: 'Vestes' },
-  { key: 'veste_legere', label: 'Vestes légères' },
-  { key: 'veste_epaisse', label: 'Vestes chaudes' },
-  { key: 'pantalon', label: 'Pantalons' },
-  { key: 'short', label: 'Shorts' },
-  { key: 'jupe', label: 'Jupes' },
-  { key: 'robe', label: 'Robes' },
-  { key: 'chaussures', label: 'Chaussures' },
-  { key: 'echarpe', label: 'Écharpes' },
-  { key: 'bonnet', label: 'Bonnets' },
-  { key: 'parapluie', label: 'Parapluies' },
+  ...TYPE_ORDER.map((key) => ({ key, label: TYPE_PLURALS[key] })),
 ];
 
 type StateFilter = 'all' | 'clean' | 'dirty';
@@ -79,8 +38,6 @@ const STATE_OPTIONS: { key: StateFilter; label: string }[] = [
 ];
 
 const MAX_COLORS = 3;
-
-const typeLabel = (t: ClothingType) => TYPES.find((x) => x.key === t)?.label ?? t;
 
 // ---------- Petit composant de sélection ----------
 function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
@@ -189,7 +146,7 @@ export default function WardrobeScreen() {
     const dominant = [...colors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([color]) => color).join(', ') || '—';
     const purchases = items.filter((item) => typeof item.price === 'number');
     const averageCost = purchases.length ? (purchases.reduce((sum, item) => sum + (item.price ?? 0) / Math.max(1, worn.get(item.id) ?? 0), 0) / purchases.length).toFixed(2) : null;
-    const missingRainwear = !items.some((item) => ['veste', 'veste_legere', 'veste_epaisse'].includes(item.type) && item.waterproof);
+    const missingRainwear = !items.some((item) => isJacket(item.type) && item.waterproof);
     Alert.alert('Statistiques du dressing', `${never} pièce${never !== 1 ? 's' : ''} jamais portée${never !== 1 ? 's' : ''}\nCouleurs dominantes : ${dominant}\n${averageCost ? `Coût moyen par port : ${averageCost} €\n` : ''}${missingRainwear ? 'Il te manque une veste imperméable.' : 'Tu as une veste imperméable.'}`);
   };
 
@@ -261,7 +218,7 @@ export default function WardrobeScreen() {
     const fields = {
       type, pattern,
       price: priceText.trim() ? Number(priceText.replace(',', '.')) : undefined,
-      waterproof: ['veste', 'veste_legere', 'veste_epaisse'].includes(type) ? waterproof : false,
+      waterproof: isJacket(type) ? waterproof : false,
       color: selColors[0],
       extraColors: selColors.slice(1),
       styles: selStyles.length > 0 ? selStyles : (['casual'] as Style[]),
@@ -334,7 +291,7 @@ export default function WardrobeScreen() {
     if (!item) return;
     Alert.alert(
       'Supprimer ce vêtement ?',
-      `${typeLabel(item.type)} · ${item.color}\nCette action est définitive.`,
+      `${TYPE_LABELS[item.type]} · ${item.color}\nCette action est définitive.`,
       [
         { text: 'Annuler', style: 'cancel' },
         {
@@ -358,29 +315,23 @@ export default function WardrobeScreen() {
     );
   };
 
-  return (
-    <AuroraScreen>
+  // En-tête de la liste : il défile avec les vêtements
+  const listHeader = (
+    <View style={styles.listHeader}>
       {/* Titre et boutons d'ajout */}
       <View style={styles.top}>
-        <Text style={styles.title}>
-          Mon dressing ({visible.length}
-          {visible.length !== items.length ? ` sur ${items.length}` : ''})
-        </Text>
-        <View style={styles.actions}>
-          <Pressable style={[styles.btn, styles.btnGhost]} onPress={showStats}>
-            <MaterialCommunityIcons name="chart-donut" size={18} color={Palette.accent} />
-            <Text style={styles.btnGhostText}>Stats</Text>
-          </Pressable>
-          <Pressable style={styles.btn} onPress={() => pickImage('camera')}>
-            <MaterialCommunityIcons name="camera-outline" size={18} color={Palette.onAccent} />
-            <Text style={styles.btnText}>Photo</Text>
-          </Pressable>
-          <Pressable style={styles.btn} onPress={() => pickImage('library')}>
-            <MaterialCommunityIcons name="image-outline" size={18} color={Palette.onAccent} />
-            <Text style={styles.btnText}>Galerie · 10 photos</Text>
-          </Pressable>
+        <View style={styles.hero}>
+          <Text style={styles.heroLabel}>Mon dressing</Text>
+          <Text style={styles.heroCount}>{visible.length}</Text>
+          <Text style={styles.heroSub}>
+            {visible.length !== items.length ? `pièces sur ${items.length}` : visible.length > 1 ? 'pièces' : 'pièce'}
+          </Text>
+        </View>
+        <View style={styles.roundActions}>
+          <RoundAction icon="camera" label="Photo" onPress={() => pickImage('camera')} />
+          <RoundAction icon="image-multiple" label="Galerie" onPress={() => pickImage('library')} />
           <ImportFromShopButton onImported={reload} />
-          {/* <DemoDataButton onChanged={reload} /> */}
+          <RoundAction icon="chart-donut" label="Stats" onPress={showStats} />
         </View>
       </View>
 
@@ -423,7 +374,7 @@ export default function WardrobeScreen() {
 
       {/* Panneau de filtres : état, occasion, couleur */}
       {showFilters && (
-        <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent}>
+        <View style={[styles.panel, styles.panelContent]}>
           <Text style={styles.panelLabel}>État</Text>
           <View style={styles.chips}>
             {STATE_OPTIONS.map((o) => (
@@ -434,29 +385,34 @@ export default function WardrobeScreen() {
           <Text style={styles.panelLabel}>Occasion</Text>
           <View style={styles.chips}>
             <Chip label="Toutes" active={styleFilter === null} onPress={() => setStyleFilter(null)} />
-            {STYLES.map((s) => (
+            {STYLE_OPTIONS.map((s) => (
               <Chip key={s.key} label={s.label} active={styleFilter === s.key} onPress={() => setStyleFilter(s.key)} />
             ))}
           </View>
 
           <Text style={styles.panelLabel}>Couleur</Text>
           <View style={styles.swatches}>
-            {(Object.keys(COLORS) as ColorName[]).map((c) => (
+            {COLOR_ORDER.map((c) => (
               <Pressable
                 key={c}
                 onPress={() => setColorFilter((cur) => (cur === c ? null : c))} // retoucher la couleur la désélectionne
                 style={styles.swatchWrap}
               >
-                <View style={[styles.swatch, { backgroundColor: COLORS[c] }, colorFilter === c && styles.swatchActive]} />
+                <View style={[styles.swatch, { backgroundColor: COLOR_HEX[c] }, colorFilter === c && styles.swatchActive]} />
                 <Text style={styles.swatchLabel}>{c}</Text>
               </Pressable>
             ))}
           </View>
-        </ScrollView>
+        </View>
       )}
+    </View>
+  );
 
+  return (
+    <AuroraScreen>
       <FlatList
         data={visible}
+        ListHeaderComponent={listHeader}
         keyExtractor={(i) => i.id}
         numColumns={2}
         columnWrapperStyle={styles.row}
@@ -478,9 +434,9 @@ export default function WardrobeScreen() {
             <Image source={{ uri: item.uri }} style={styles.cardImg} />
             <View style={styles.cardInfo}>
               {allColors(item).map((c) => (
-                <View key={c} style={[styles.dot, { backgroundColor: COLORS[c] }]} />
+                <View key={c} style={[styles.dot, { backgroundColor: COLOR_HEX[c] }]} />
               ))}
-              <Text style={styles.cardLabel} numberOfLines={1}>{typeLabel(item.type)}</Text>
+              <Text style={styles.cardLabel} numberOfLines={1}>{TYPE_LABELS[item.type]}</Text>
             </View>
             <Pressable
               style={[styles.cleanBtn, item.clean ? styles.cleanOk : styles.cleanKo]}
@@ -489,7 +445,7 @@ export default function WardrobeScreen() {
               <MaterialCommunityIcons
                 name={item.clean ? 'check-circle-outline' : 'washing-machine'}
                 size={16}
-                color={Palette.white}
+                color={item.clean ? Palette.success : Palette.warning}
               />
               <Text style={styles.cleanText}>{item.clean ? 'Propre' : 'Sale · marquer lavé'}</Text>
             </Pressable>
@@ -536,7 +492,7 @@ export default function WardrobeScreen() {
 
             <Text style={styles.label}>Type</Text>
             <View style={styles.chips}>
-              {TYPES.map((t) => <Chip key={t.key} label={t.label} active={type === t.key} onPress={() => setType(t.key)} />)}
+              {TYPE_ORDER.map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
             </View>
 
             <Text style={styles.label}>Couleurs</Text>
@@ -544,12 +500,12 @@ export default function WardrobeScreen() {
               Touche jusqu&apos;à {MAX_COLORS} couleurs. Le numéro 1 est la couleur principale.
             </Text>
             <View style={styles.swatches}>
-              {(Object.keys(COLORS) as ColorName[]).map((c) => {
+              {COLOR_ORDER.map((c) => {
                 const rank = selColors.indexOf(c); // -1 si non sélectionnée
                 return (
                   <Pressable key={c} onPress={() => toggleColor(c)} style={styles.swatchWrap}>
                     <View>
-                      <View style={[styles.swatch, { backgroundColor: COLORS[c] }, rank >= 0 && styles.swatchActive]} />
+                      <View style={[styles.swatch, { backgroundColor: COLOR_HEX[c] }, rank >= 0 && styles.swatchActive]} />
                       {rank >= 0 && (
                         <View style={styles.badge}>
                           <Text style={styles.badgeText}>{rank + 1}</Text>
@@ -564,7 +520,7 @@ export default function WardrobeScreen() {
 
             <Text style={styles.label}>Occasions</Text>
             <View style={styles.chips}>
-              {STYLES.map((s) => (
+              {STYLE_OPTIONS.map((s) => (
                 <Chip key={s.key} label={s.label} active={selStyles.includes(s.key)} onPress={() => toggleStyle(s.key)} />
               ))}
             </View>
@@ -577,7 +533,7 @@ export default function WardrobeScreen() {
 
             <Text style={styles.label}>Prix payé (facultatif, en €)</Text>
             <TextInput style={styles.formInput} keyboardType="decimal-pad" value={priceText} onChangeText={setPriceText} placeholder="0,00" placeholderTextColor={Palette.textSecondary} />
-            {['veste', 'veste_legere', 'veste_epaisse'].includes(type) && <Chip label={waterproof ? 'Veste imperméable ✓' : 'Veste imperméable ?'} active={waterproof} onPress={() => setWaterproof((value) => !value)} />}
+            {isJacket(type) && <Chip label={waterproof ? 'Veste imperméable ✓' : 'Veste imperméable ?'} active={waterproof} onPress={() => setWaterproof((value) => !value)} />}
 
             <View style={styles.actions}>
               <Pressable style={[styles.btn, styles.btnGhost]} onPress={closeForm}>
@@ -604,28 +560,34 @@ export default function WardrobeScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Palette.background },
-  top: { paddingHorizontal: 20, paddingTop: 20, gap: 12 },
-  title: { fontSize: 22, fontWeight: '700', color: Palette.text },
+  listHeader: { marginHorizontal: -16 },
+  top: { paddingHorizontal: 16, paddingTop: 12, gap: 20 },
+  hero: { alignItems: 'center', paddingTop: 16 },
+  heroLabel: { color: Palette.white, fontSize: 17, fontWeight: '500', opacity: 0.9 },
+  heroCount: { color: Palette.white, fontSize: 64, lineHeight: 72, fontWeight: '700', letterSpacing: -1.5 },
+  heroSub: { color: Palette.textSecondary, fontSize: 15, fontWeight: '500' },
+  roundActions: { flexDirection: 'row', alignItems: 'flex-start' },
+  title: { fontSize: 28, fontWeight: '700', color: Palette.text, letterSpacing: -0.5 },
   actions: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   link: { color: Palette.accent, fontWeight: '600' },
 
   // Onglets de catégories
   tabsScroll: { flexGrow: 0, flexShrink: 0, height: 44, marginTop: 12 },
-  tabs: { paddingHorizontal: 20, gap: 8, alignItems: 'center' },
+  tabs: { paddingHorizontal: 16, gap: 8, alignItems: 'center' },
   tab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surfaceRaised,
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: Palette.surface,
   },
-  tabActive: { backgroundColor: Palette.surfaceSelected },
+  tabActive: { backgroundColor: Palette.white },
   tabText: { color: Palette.textSecondary, fontWeight: '600' },
-  tabTextActive: { color: Palette.accent },
+  tabTextActive: { color: Palette.black },
   tabCount: { color: Palette.textSecondary, fontSize: 12, fontWeight: '600' },
-  tabCountActive: { color: Palette.accent },
+  tabCountActive: { color: Palette.black },
 
   // Filtres
   filterBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 10,
+    paddingHorizontal: 16, paddingVertical: 10,
   },
   filterBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -637,32 +599,32 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.accent, alignItems: 'center', justifyContent: 'center',
   },
   filterBadgeText: { color: Palette.onAccent, fontSize: 11, fontWeight: '700' },
-  panel: { maxHeight: 280, marginHorizontal: 20, marginBottom: 8, backgroundColor: Palette.surface, borderRadius: 16, borderWidth: 1, borderColor: Palette.border },
+  panel: { marginHorizontal: 16, marginBottom: 8, backgroundColor: Palette.surface, borderRadius: 24 },
   panelContent: { padding: 14, gap: 10 },
   panelLabel: { fontWeight: '600', fontSize: 14, marginTop: 4, color: Palette.text },
 
   // Liste
-  list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
+  list: { paddingHorizontal: 16, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
   row: { gap: 12 },
-  empty: { color: Palette.textSecondary },
+  empty: { color: Palette.textSecondary, textAlign: 'center', backgroundColor: Palette.surface, borderRadius: 24, padding: 24, overflow: 'hidden' },
   emptyBox: { gap: 12, marginTop: 24 },
   btn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
+    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 999,
   },
   btnText: { color: Palette.onAccent, fontWeight: '600' },
   btnGhost: { backgroundColor: Palette.surfaceRaised },
   btnGhostText: { color: Palette.text, fontWeight: '600' },
-  card: { flex: 1, backgroundColor: Palette.surface, borderRadius: 18, padding: 8, gap: 6, borderWidth: 1, borderColor: Palette.border },
+  card: { flex: 1, backgroundColor: Palette.surface, borderRadius: 22, padding: 10, gap: 8 },
   cardDirty: { opacity: 0.6 },
   cardImg: { width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
   cardInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.hairline },
   cardLabel: { flexShrink: 1, marginLeft: 2, color: Palette.text },
   cleanBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 8 },
-  cleanOk: { backgroundColor: '#247A5C' },
-  cleanKo: { backgroundColor: '#77512F' },
-  cleanText: { color: Palette.white, fontSize: 12, fontWeight: '600' },
+  cleanOk: { backgroundColor: 'rgba(52,211,153,0.18)' },
+  cleanKo: { backgroundColor: 'rgba(251,191,36,0.18)' },
+  cleanText: { color: Palette.text, fontSize: 12, fontWeight: '600' },
 
   // Formulaire
   form: { padding: 20, gap: 12, paddingBottom: 40 },

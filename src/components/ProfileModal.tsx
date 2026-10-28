@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 
 import AuroraScreen from '@/components/AuroraScreen';
 import { GlassCard } from '@/components/GlassCard';
+import { STYLE_OPTIONS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import type { Profile } from '@/hooks/useProfile';
 import { exportBackup, importBackup, clearUserData } from '@/services/backupService';
@@ -140,12 +141,7 @@ export default function ProfileModal({ visible, onClose, profile, update, onData
 
             <Text style={styles.label}>Style préféré</Text>
             <Chips
-              options={[
-                { key: 'casual', label: 'Casual' },
-                { key: 'sport', label: 'Sport' },
-                { key: 'formel', label: 'Formel' },
-                { key: 'soiree', label: 'Soirée' },
-              ]}
+              options={STYLE_OPTIONS}
               value={profile.style}
               onChange={(style) => update({ style })}
             />
@@ -245,17 +241,17 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '800', color: Palette.text, letterSpacing: -0.4 },
   avatarWrap: {
     alignSelf: 'center', width: 96, height: 96, borderRadius: 48, overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.5)', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Palette.surfaceRaised, alignItems: 'center', justifyContent: 'center',
   },
   avatar: { width: 96, height: 96 },
   card: { gap: 10 },
   label: { fontWeight: '700', color: Palette.text, marginTop: 6 },
   input: {
     borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
-    backgroundColor: 'rgba(255,255,255,0.55)', color: Palette.text,
+    backgroundColor: Palette.surfaceRaised, color: Palette.text,
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.55)' },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, backgroundColor: Palette.surfaceRaised },
   chipOn: { backgroundColor: Palette.ink },
   chipText: { color: Palette.textSecondary, fontWeight: '700' },
   chipTextOn: { color: Palette.onAccent, fontWeight: '700' },
@@ -265,7 +261,7 @@ const styles = StyleSheet.create({
   helper: { color: Palette.textSecondary, fontSize: 13 },
   thresholdRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   thresholdLabel: { flex: 1, color: Palette.text, fontWeight: '600' },
-  stepper: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.7)', alignItems: 'center', justifyContent: 'center' },
+  stepper: { width: 32, height: 32, borderRadius: 16, backgroundColor: Palette.surfaceRaised, alignItems: 'center', justifyContent: 'center' },
   stepText: { color: Palette.text, fontSize: 20, fontWeight: '700' },
   thresholdValue: { color: Palette.textSecondary, minWidth: 66, textAlign: 'center', fontSize: 12 },
   actionButton: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },

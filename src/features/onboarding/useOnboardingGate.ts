@@ -13,7 +13,7 @@ export function useOnboardingGate() {
   useEffect(() => {
     (async () => {
       // Pour revoir le questionnaire en développement, décommente la ligne suivante, lance l'app une fois, puis recommente-la :
-      await AsyncStorage.removeItem('@app/profile');
+      // await AsyncStorage.removeItem('@app/profile');
       const alreadyOpened = await AsyncStorage.getItem(FIRST_OPEN_KEY);
       const [profile] = await Promise.all([
         loadProfile(),

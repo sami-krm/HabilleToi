@@ -1,85 +1,41 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
-import '@/global.css';
-
-import { Platform } from 'react-native';
-
+// Thème sombre « néo-banque » : fond noir, dégradé violet en haut d'écran, cartes gris anthracite.
 export const Palette = {
-  background: '#F4F1FF',
-  surface: 'rgba(255,255,255,0.58)',        // verre
-  surfaceRaised: 'rgba(255,255,255,0.88)',  // verre plus opaque (carte de tenue)
-  surfaceSelected: '#FFFFFF',
-  border: 'rgba(255,255,255,0.95)',
-  hairline: 'rgba(23,20,43,0.14)',          // fin contour visible sur fond clair (pastilles de couleur)
-  text: '#17142B',
-  textSecondary: '#4E4968',
-  accent: '#5B3DF5',
-  accentSoft: 'rgba(91,61,245,0.12)',
-  success: '#13825A',
-  danger: '#C93550',
-  warning: '#A8630A',
+  background: '#000000',
+  surface: '#1C1C1E',                       // cartes et listes
+  surfaceRaised: '#2C2C2E',                 // boutons ronds, puces, champs de saisie
+  surfaceSelected: '#3A3A3C',
+  border: 'rgba(255,255,255,0.06)',
+  hairline: 'rgba(255,255,255,0.22)',       // fin contour des pastilles de couleur sur fond sombre
+  text: '#FFFFFF',
+  textSecondary: '#9A9AA1',
+  accent: '#7C5CFF',
+  accentSoft: 'rgba(124,92,255,0.18)',
+  success: '#34D399',
+  danger: '#FF6B7A',
+  warning: '#FBBF24',
   white: '#FFFFFF',
-  black: '#17142B',
-  onAccent: '#FFFFFF',                      // texte et icônes sur fond violet
-  ink: '#17142B',                           // fond des boutons sombres
-  shadow: '#46329F',
+  black: '#000000',
+  onAccent: '#FFFFFF',                      // texte et icônes sur fond violet ou sur « ink »
+  ink: '#3A3A3C',                           // pastille sélectionnée des sélecteurs
+  shadow: '#000000',
+  overlay: 'rgba(255,255,255,0.16)',        // boutons translucides posés sur le dégradé
 } as const;
 
-// L'app garde le thème « Aurore claire » quel que soit le mode du téléphone.
-const appColors = {
-  text: Palette.text,
-  background: Palette.background,
-  backgroundElement: Palette.surface,
-  backgroundSelected: Palette.surfaceSelected,
-  textSecondary: Palette.textSecondary,
-} as const;
+/** Dégradé du haut d'écran : violet lumineux qui se fond dans le noir. */
+export const HeaderGradient = 'linear-gradient(180deg, #A47BFF 0%, #6C3BF0 32%, #2A1366 62%, #000000 100%)';
+export const SoftGradient = 'linear-gradient(180deg, #3B1D8F 0%, #160A33 45%, #000000 100%)';
 
-export const Colors = {
-  light: appColors,
-  dark: appColors,
-} as const;
-
-/** Style « verre » partagé : blanc translucide, contour clair, ombre violette douce. */
+/** Carte sombre partagée (ancien style « verre »). */
 export const Glass = {
   backgroundColor: Palette.surface,
   borderWidth: 1,
   borderColor: Palette.border,
-  shadowColor: Palette.shadow,
-  shadowOpacity: 0.12,
-  shadowRadius: 14,
-  shadowOffset: { width: 0, height: 6 },
-  elevation: 2,
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+export const Radius = {
+  card: 24,
+  pill: 999,
+} as const;
 
 export const Spacing = {
   half: 2,
@@ -91,5 +47,4 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

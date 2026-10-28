@@ -3,20 +3,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, type ComponentProps } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { COLOR_HEX, TYPE_LABELS, TYPE_PLURALS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
-import { PACK_ORDER, typePlural, typeSingular } from '@/services/packingGenerator';
+import { PACK_ORDER } from '@/services/packingGenerator';
 import { formatDay, formatShort } from '@/services/tripDates';
-import type { ClothingItem, ColorName } from '@/types';
+import type { ClothingItem } from '@/types';
 import { allColors } from '@/types';
 import type { DayWeather, SavedTrip } from './tripTypes';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
-
-const COLOR_HEX: Record<ColorName, string> = {
-  noir: '#111111', blanc: '#FFFFFF', gris: '#9E9E9E', beige: '#D8C3A5',
-  marine: '#1F2A44', marron: '#6B4423', bleu: '#2F6FED', rouge: '#D32F2F',
-  vert: '#2E8B57', jaune: '#F4C430', orange: '#F57C00', rose: '#F48FB1', violet: '#7E57C2',
-};
 
 function weatherIcon(d: DayWeather): IconName {
   if (d.precipitation >= 1) return 'weather-rainy';
@@ -117,14 +112,14 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
           if (group.length === 0) return null;
           return (
             <View key={type} style={styles.group}>
-              <Text style={styles.groupTitle}>{typePlural(type)} ({group.length})</Text>
+              <Text style={styles.groupTitle}>{TYPE_PLURALS[type]} ({group.length})</Text>
               {group.map((item) => {
                 const packed = trip.packed.includes(item.id);
                 return (
                   <Pressable key={item.id} style={[styles.row, packed && styles.rowPacked]} onPress={() => onTogglePacked(item.id)}>
                     <Image source={{ uri: item.uri }} style={styles.img} />
                     <View style={styles.rowInfo}>
-                      <Text style={styles.rowName}>{typeSingular(item.type)}</Text>
+                      <Text style={styles.rowName}>{TYPE_LABELS[item.type]}</Text>
                       <View style={styles.dots}>
                         {allColors(item).map((c) => (
                           <View key={c} style={[styles.dot, { backgroundColor: COLOR_HEX[c] }]} />

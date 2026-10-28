@@ -1,4 +1,5 @@
 import AuroraScreen from '@/components/AuroraScreen';
+import { RoundAction } from '@/components/RoundAction';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
@@ -128,11 +129,14 @@ export default function TripScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={styles.title}>Mes valises</Text>
-            <Pressable style={styles.btn} onPress={() => setScreen({ name: 'form' })}>
-              <MaterialCommunityIcons name="plus" size={18} color={Palette.onAccent} />
-              <Text style={styles.btnText}>Nouvelle valise</Text>
-            </Pressable>
+            <View style={styles.hero}>
+              <Text style={styles.heroLabel}>Mes valises</Text>
+              <Text style={styles.heroCount}>{trips.length}</Text>
+              <Text style={styles.heroSub}>{trips.length > 1 ? 'voyages prévus' : 'voyage prévu'}</Text>
+            </View>
+            <View style={styles.roundActions}>
+              <RoundAction icon="plus" label="Nouvelle valise" onPress={() => setScreen({ name: 'form' })} />
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -169,17 +173,22 @@ export default function TripScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Palette.background },
-  list: { padding: 20, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
-  header: { gap: 12, marginBottom: 8 },
-  title: { fontSize: 22, fontWeight: '700', color: Palette.text },
-  empty: { alignItems: 'center', gap: 12, marginTop: 32 },
+  list: { paddingHorizontal: 16, paddingTop: 12, gap: 12, paddingBottom: 140 }, // marge basse : barre d'onglets flottante
+  header: { gap: 24, marginBottom: 8 },
+  hero: { alignItems: 'center', paddingTop: 16 },
+  heroLabel: { color: Palette.white, fontSize: 17, fontWeight: '500', opacity: 0.9 },
+  heroCount: { color: Palette.white, fontSize: 64, lineHeight: 72, fontWeight: '700', letterSpacing: -1.5 },
+  heroSub: { color: Palette.textSecondary, fontSize: 15, fontWeight: '500' },
+  roundActions: { flexDirection: 'row', justifyContent: 'center' },
+  title: { fontSize: 28, fontWeight: '700', color: Palette.text, letterSpacing: -0.5 },
+  empty: { alignItems: 'center', gap: 12, padding: 24, backgroundColor: Palette.surface, borderRadius: 24 },
   emptyText: { color: Palette.textSecondary, textAlign: 'center' },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: Palette.surface, borderColor: Palette.border, borderWidth: 1, borderRadius: 18, padding: 14 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: Palette.surface, borderRadius: 24, padding: 16 },
   cardTitle: { fontSize: 17, fontWeight: '700', color: Palette.text },
   cardSub: { color: Palette.textSecondary, fontSize: 13, textTransform: 'capitalize' },
   btn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, alignSelf: 'flex-start',
-    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
+    backgroundColor: Palette.accent, paddingHorizontal: 18, paddingVertical: 12, borderRadius: 999,
   },
   btnText: { color: Palette.onAccent, fontWeight: '600' },
 });

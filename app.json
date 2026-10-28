@@ -6,9 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "meteovetements",
-    "userInterfaceStyle": "light",
-    "backgroundColor": "#F4F1FF",
-    "primaryColor": "#9B7BFF",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#000000",
+    "primaryColor": "#7C5CFF",
     "ios": {
       "bundleIdentifier": "com.meteovetements.app",
       "icon": "./assets/expo.icon"
@@ -33,7 +33,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F4F1FF",
+          "backgroundColor": "#000000",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

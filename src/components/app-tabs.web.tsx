@@ -6,10 +6,7 @@ import {
   TabTriggerSlotProps,
   TabListProps,
 } from 'expo-router/ui';
-import { Pressable, View, StyleSheet } from 'react-native';
-
-import { ThemedText } from './themed-text';
-import { ThemedView } from './themed-view';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { MaxContentWidth, Palette, Spacing } from '@/constants/theme';
 
@@ -31,7 +28,6 @@ export default function AppTabs() {
           <TabTrigger name="outfits" href="/outfits" asChild>
             <TabButton>Mes tenues</TabButton>
           </TabTrigger>
-          
         </CustomTabList>
       </TabList>
     </Tabs>
@@ -41,13 +37,9 @@ export default function AppTabs() {
 export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView
-        type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={[styles.tabButtonView, isFocused && styles.tabButtonActive]}>
-        <ThemedText type="small" style={{ color: isFocused ? Palette.accent : Palette.textSecondary }}>
-          {children}
-        </ThemedText>
-      </ThemedView>
+      <View style={[styles.tabButtonView, isFocused && styles.tabButtonActive]}>
+        <Text style={[styles.tabText, isFocused && styles.tabTextActive]}>{children}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -55,9 +47,7 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
 export function CustomTabList(props: TabListProps) {
   return (
     <View {...props} style={styles.tabListContainer}>
-      <ThemedView type="backgroundElement" style={styles.innerContainer}>
-        {props.children}
-      </ThemedView>
+      <View style={styles.innerContainer}>{props.children}</View>
     </View>
   );
 }
@@ -65,6 +55,7 @@ export function CustomTabList(props: TabListProps) {
 const styles = StyleSheet.create({
   tabListContainer: {
     position: 'absolute',
+    bottom: 0,
     width: '100%',
     padding: Spacing.three,
     justifyContent: 'center',
@@ -80,6 +71,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     gap: Spacing.two,
     maxWidth: MaxContentWidth,
+    backgroundColor: 'rgba(28,28,30,0.92)',
   },
   pressed: {
     opacity: 0.7,
@@ -89,5 +81,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     borderRadius: Spacing.three,
   },
-  tabButtonActive: { backgroundColor: Palette.surfaceSelected },
+  tabButtonActive: { backgroundColor: Palette.white },
+  tabText: { fontSize: 14, lineHeight: 20, fontWeight: '500', color: Palette.textSecondary },
+  tabTextActive: { color: Palette.black },
 });

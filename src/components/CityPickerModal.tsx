@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   body: { flex: 1, padding: 22, paddingTop: 56, gap: 14 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { color: Palette.text, fontWeight: '800', fontSize: 24 },
-  input: { backgroundColor: 'rgba(255,255,255,0.65)', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, color: Palette.text },
+  input: { backgroundColor: Palette.surfaceRaised, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, color: Palette.text },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: Palette.border },
   result: { color: Palette.text, fontWeight: '600', flex: 1 },
 });

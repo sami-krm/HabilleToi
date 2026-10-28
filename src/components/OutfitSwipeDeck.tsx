@@ -10,8 +10,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { COLOR_HEX, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
-import type { ColorName, Outfit } from '@/types';
+import type { Outfit } from '@/types';
 import { allColors } from '@/types';
 
 export type SwipeDirection = 'left' | 'right';
@@ -28,19 +29,6 @@ interface Props {
   onSwipe: (direction: SwipeDirection) => void;
   ref?: Ref<SwipeDeckHandle>;
 }
-
-const COLOR_HEX: Record<ColorName, string> = {
-  noir: '#111111', blanc: '#FFFFFF', gris: '#9E9E9E', beige: '#D8C3A5',
-  marine: '#1F2A44', marron: '#6B4423', bleu: '#2F6FED', rouge: '#D32F2F',
-  vert: '#2E8B57', jaune: '#F4C430', orange: '#F57C00', rose: '#F48FB1', violet: '#7E57C2',
-};
-
-const TYPE_LABEL: Record<string, string> = {
-  tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
-  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe', chaussures: 'Chaussures',
-  echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
-};
 
 const BEHIND_SCALE = 0.94;
 const BEHIND_OFFSET = 14;
@@ -185,7 +173,7 @@ function SwipeCard({ outfit, hasNext, onSwipe, ref }: Props) {
               <View key={item.id} style={styles.piece}>
                 <Image source={{ uri: item.uri }} style={styles.pieceImg} />
                 <View style={styles.pieceInfo}>
-                  <Text style={styles.pieceLabel} numberOfLines={1}>{TYPE_LABEL[item.type] ?? item.type}</Text>
+                  <Text style={styles.pieceLabel} numberOfLines={1}>{TYPE_LABELS[item.type]}</Text>
                   <View style={styles.dots}>
                     {allColors(item).map((c) => (
                       <View key={c} style={[styles.dot, { backgroundColor: COLOR_HEX[c] }]} />
@@ -213,13 +201,10 @@ const styles = StyleSheet.create({
   wrapper: { marginBottom: BEHIND_OFFSET + 4 },
   plate: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: Palette.surface, borderRadius: 24,
+    backgroundColor: Palette.surfaceSelected, borderRadius: 28, opacity: 0.6,
   },
   card: {
-    backgroundColor: Palette.surfaceRaised, borderRadius: 24, padding: 12, gap: 10,
-    borderWidth: 1, borderColor: Palette.border, overflow: 'hidden',
-    shadowColor: Palette.shadow, shadowOpacity: 0.16, shadowRadius: 12, shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
+    backgroundColor: Palette.surface, borderRadius: 28, padding: 14, gap: 12, overflow: 'hidden',
   },
   tint: { ...StyleSheet.absoluteFill, zIndex: 1 },
   badge: {
@@ -231,7 +216,7 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 15, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   piece: { width: '48%' },
-  pieceImg: { width: '100%', aspectRatio: 1, borderRadius: 16, backgroundColor: Palette.surface },
+  pieceImg: { width: '100%', aspectRatio: 1, borderRadius: 18, backgroundColor: Palette.surfaceRaised },
   pieceInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
   pieceLabel: { fontWeight: '600', flexShrink: 1, color: Palette.text },
   dots: { flexDirection: 'row', gap: 4 },

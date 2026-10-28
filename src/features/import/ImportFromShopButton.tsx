@@ -1,8 +1,7 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text } from 'react-native';
+import { Modal } from 'react-native';
 
-import { Palette } from '@/constants/theme';
+import { RoundAction } from '@/components/RoundAction';
 import { loadProfile } from '@/features/onboarding/profile';
 import { useLifecycleLog } from '@/utils/lifecycleLog';
 import ShopImport from './ShopImport';
@@ -28,10 +27,7 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
 
   return (
     <>
-      <Pressable style={styles.btn} onPress={openImport}>
-        <MaterialCommunityIcons name="storefront-outline" size={18} color={Palette.onAccent} />
-        <Text style={styles.btnText}>Importer</Text>
-      </Pressable>
+      <RoundAction icon="storefront" label="Importer" onPress={openImport} />
 
       <Modal
         visible={open}
@@ -46,10 +42,3 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
   );
 }
 
-const styles = StyleSheet.create({
-  btn: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: Palette.accent, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 16,
-  },
-  btnText: { color: Palette.onAccent, fontWeight: '600' },
-});

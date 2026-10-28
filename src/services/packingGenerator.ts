@@ -1,3 +1,4 @@
+import { TYPE_LABELS, TYPE_PLURALS } from '@/constants/clothing';
 import type { DayOutfit, DayWeather } from '@/features/trip/tripTypes';
 import { itemPairScore } from '@/services/outfitGenerator';
 import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
@@ -7,20 +8,6 @@ export const PACK_ORDER: ClothingType[] = [
   'veste_legere', 'veste', 'veste_epaisse', 'chaussures', 'echarpe', 'bonnet', 'parapluie',
 ];
 
-const SINGULAR: Record<ClothingType, string> = {
-  tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
-  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
-  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
-};
-const PLURAL: Record<ClothingType, string> = {
-  tshirt: 'T-shirts', chemise: 'Chemises', pull: 'Pulls', veste: 'Vestes',
-  veste_legere: 'Vestes légères', veste_epaisse: 'Vestes chaudes',
-  pantalon: 'Pantalons', short: 'Shorts', jupe: 'Jupes', robe: 'Robes',
-  chaussures: 'Chaussures', echarpe: 'Écharpes', bonnet: 'Bonnets', parapluie: 'Parapluies',
-};
-export const typeSingular = (t: ClothingType) => SINGULAR[t];
-export const typePlural = (t: ClothingType) => PLURAL[t];
 
 const NEUTRALS: ColorName[] = ['noir', 'blanc', 'gris', 'beige', 'marine', 'marron'];
 const isNeutralItem = (i: ClothingItem) => NEUTRALS.includes(i.color);
@@ -208,9 +195,9 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     if (n === 0) continue;
     if (got[type] === 0) {
       if (type === 'short' && want.short === 0) continue; // déjà signalé plus haut
-      notes.push(`${SINGULAR[type]} : aucune pièce dans ton dressing, prévois-en ${type === 'chaussures' ? 'une paire' : 'une'}.`);
+      notes.push(`${TYPE_LABELS[type]} : aucune pièce dans ton dressing, prévois-en ${type === 'chaussures' ? 'une paire' : 'une'}.`);
     } else if (got[type] < n) {
-      notes.push(`${PLURAL[type]} : seulement ${got[type]} dans ton dressing (idéal : ${n}).`);
+      notes.push(`${TYPE_PLURALS[type]} : seulement ${got[type]} dans ton dressing (idéal : ${n}).`);
     }
   }
   if (tops.length < wantTops) {

@@ -1,4 +1,5 @@
-import type { ClothingItem, Weather } from '@/types';
+import { TYPE_LABELS } from '@/constants/clothing';
+import { allColors, type ClothingItem, type Weather } from '@/types';
 import { getCloudSession } from '@/services/cloudSync';
 
 const CUSTOM_ENDPOINT = process.env.EXPO_PUBLIC_STYLIST_URL;
@@ -6,24 +7,17 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL?.replace(/\/$/, '');
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 const TOKEN = process.env.EXPO_PUBLIC_APP_TOKEN;
 
-const TYPE_LABELS: Record<ClothingItem['type'], string> = {
-  tshirt: 'T-shirt', chemise: 'chemise', pull: 'pull', veste: 'veste',
-  veste_legere: 'veste légère', veste_epaisse: 'veste chaude', pantalon: 'pantalon',
-  short: 'short', jupe: 'jupe', robe: 'robe', chaussures: 'chaussures',
-  echarpe: 'écharpe', bonnet: 'bonnet', parapluie: 'parapluie',
-};
-
 export function isStylistConfigured() {
   return Boolean(CUSTOM_ENDPOINT || (SUPABASE_URL && SUPABASE_ANON_KEY));
 }
 
 function formatWardrobe(items: ClothingItem[]) {
   return items.slice(0, 120).map((item) => {
-    const colors = [item.color, ...(item.extraColors ?? [])].join(', ');
+    const colors = allColors(item).join(', ');
     const styles = item.styles.join(', ');
     const state = item.clean ? 'propre' : 'sale';
     const waterproof = item.waterproof ? ', imperméable' : '';
-    return `- ${TYPE_LABELS[item.type]} ; ${colors} ; ${styles} ; ${state}${waterproof}`;
+    return `- ${TYPE_LABELS[item.type].toLowerCase()} ; ${colors} ; ${styles} ; ${state}${waterproof}`;
   }).join('\n');
 }
 

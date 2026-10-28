@@ -23,21 +23,6 @@ export interface FoundItem {
   styles?: Style[];
 }
 
-export const TYPE_LABELS: Record<ClothingType, string> = {
-  tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
-  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
-  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
-};
-export const TYPE_ORDER = Object.keys(TYPE_LABELS) as ClothingType[];
-
-export const COLOR_HEX: Record<ColorName, string> = {
-  noir: '#111111', blanc: '#FFFFFF', gris: '#9E9E9E', beige: '#D8C3A5',
-  marine: '#1F2A44', marron: '#6B4423', bleu: '#2F6FED', rouge: '#D32F2F',
-  vert: '#2E8B57', jaune: '#F4C430', orange: '#F57C00', rose: '#F48FB1', violet: '#7E57C2',
-};
-export const COLOR_ORDER = Object.keys(COLOR_HEX) as ColorName[];
-
 /** Première estimation d'après le nom ; l'IA l'affine ensuite dans l'écran de résultats. */
 export const toFoundItem = (r: RawItem): FoundItem => {
   const guess = classifyProduct(r.name, r.context ?? '');

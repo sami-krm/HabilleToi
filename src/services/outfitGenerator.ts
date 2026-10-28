@@ -1,3 +1,4 @@
+import { TYPE_LABELS } from '@/constants/clothing';
 import { daysAgo, signatureOfIds } from '@/services/historyUtils';
 import { allColors } from '@/types';
 import type { OutfitPreferences } from '@/storage/preferences';
@@ -62,13 +63,6 @@ const REPEAT_WEIGHT: Record<ClothingType, number> = {
   tshirt: 1, chemise: 1, pantalon: 0.6, short: 0.6, jupe: 0.6, robe: 1,
   pull: 0.5, veste: 0, veste_legere: 0, veste_epaisse: 0, chaussures: 0,
   echarpe: 0, bonnet: 0, parapluie: 0,
-};
-
-const TYPE_NAMES: Record<ClothingType, string> = {
-  tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
-  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
-  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
 };
 
 /** Pénalité pour les vêtements portés récemment (aujourd'hui/hier > avant-hier > il y a 3 jours). */
@@ -237,7 +231,7 @@ export function generateOutfit(
   for (const item of best.items) {
     const d = lastWorn.get(item.id);
     if (d !== undefined && d <= 1 && REPEAT_WEIGHT[item.type] >= 0.6) {
-      notes.push(`${TYPE_NAMES[item.type]} déjà porté ${d === 0 ? "aujourd'hui" : 'hier'}.`);
+      notes.push(`${TYPE_LABELS[item.type]} déjà porté ${d === 0 ? "aujourd'hui" : 'hier'}.`);
     }
   }
 
