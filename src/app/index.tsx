@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AnimatedSegmented } from '@/components/AnimatedSegmented';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -33,6 +34,12 @@ const OCCASIONS: { key: Style; label: string }[] = [
   { key: 'sport', label: 'Sport' },
   { key: 'formel', label: 'Formel' },
   { key: 'soiree', label: 'Soirée' },
+];
+
+const DAYS: { key: string; label: string }[] = [
+  { key: '0', label: 'Aujourd’hui' },
+  { key: '1', label: 'Demain' },
+  { key: '2', label: 'Après-demain' },
 ];
 
 const DECK_SIZE = 2; // la tenue du dessus + celle qui attend derrière
@@ -158,11 +165,11 @@ export default function HomeScreen() {
     await saveLocation(location);
     setCityOpen(false);
     await loadWeather();
-    refreshMorningReminders().catch(() => {});
+    refreshMorningReminders().catch(() => { });
   }, [loadWeather]);
 
   // Remet à jour les rappels du matin avec la dernière prévision (sans bloquer l'écran)
-  useEffect(() => { refreshMorningReminders().catch(() => {}); }, []);
+  useEffect(() => { refreshMorningReminders().catch(() => { }); }, []);
 
   /** Tire une nouvelle tenue jamais vue dans cette série. */
   const draw = useCallback((): Outfit | null => {
@@ -216,7 +223,7 @@ export default function HomeScreen() {
     setLastAction({ outfit: current, direction });
 
     const signature = outfitSignature(current.items);
-    recordOutfitPreference(signature, direction).then(() => loadOutfitPreferences().then(setPreferences)).catch(() => {});
+    recordOutfitPreference(signature, direction).then(() => loadOutfitPreferences().then(setPreferences)).catch(() => { });
     if (direction === 'right') {
       addFavorite(current)
         .then((favoriteId) => setLastAction((a) => (a?.outfit === current ? { ...a, favoriteId } : a)))
@@ -226,7 +233,7 @@ export default function HomeScreen() {
 
   const undo = useCallback(() => {
     if (!lastAction) return;
-    Haptics.selectionAsync().catch(() => {});
+    Haptics.selectionAsync().catch(() => { });
     const restored = [lastAction.outfit, ...queue];
     // On ne garde que DECK_SIZE cartes ; celle qui sort pourra revenir plus tard
     while (restored.length > DECK_SIZE) {
@@ -234,7 +241,7 @@ export default function HomeScreen() {
       if (dropped) seenRef.current.delete(outfitSignature(dropped.items));
     }
     setQueue(restored);
-    if (lastAction.favoriteId) removeFavorite(lastAction.favoriteId).catch(() => {});
+    if (lastAction.favoriteId) removeFavorite(lastAction.favoriteId).catch(() => { });
     setLastAction(null);
   }, [lastAction, queue, removeFavorite]);
 
@@ -248,7 +255,7 @@ export default function HomeScreen() {
     const dirtyIds = outfit.items.filter((item) => allHistory.filter((entry) => entry.itemIds.includes(item.id) && entry.wornAt > (item.lastWashedAt ?? 0)).length >= thresholds[item.type]).map((item) => item.id);
     if (dirtyIds.length) await setClean(dirtyIds, false);
     const recordFeedback = (comfort: 'too_hot' | 'good' | 'too_cold') => {
-      saveComfortFeedback({ wornAt: now, feedback: comfort, temperature: weather?.temperature ?? 20 }).catch(() => {});
+      saveComfortFeedback({ wornAt: now, feedback: comfort, temperature: weather?.temperature ?? 20 }).catch(() => { });
       setComfortBias((bias) => Math.max(-5, Math.min(5, bias + (comfort === 'too_cold' ? -1 : comfort === 'too_hot' ? 1 : 0))));
     };
     Alert.alert('Comment était ta tenue ?', 'Ton retour aide à ajuster les prochaines recommandations.', [
@@ -342,26 +349,14 @@ export default function HomeScreen() {
           <Text style={styles.weatherAdvice}>{weather.rainTime ? `Prends une veste légère : pluie vers ${weather.rainTime}.` : (weather.minTemperature ?? weather.temperature) < 12 ? 'Prends une veste chaude pour ce matin.' : (weather.maxTemperature ?? weather.temperature) > 22 ? 'Une tenue légère devrait suffire cet après-midi.' : 'Une veste légère peut être utile ce matin.'}</Text>
         </GlassCard>
 
-        <View style={styles.daySelector}>
-          {['Aujourd’hui', 'Demain', 'Après-demain'].map((label, offset) => (
-            <Pressable key={label} onPress={() => setDayOffset(offset)} style={[styles.dayOption, dayOffset === offset && styles.dayActive]}>
-              <Text style={[styles.dayText, dayOffset === offset && styles.dayTextActive]}>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <AnimatedSegmented
+          options={DAYS}
+          value={String(dayOffset)}
+          onChange={(key) => setDayOffset(Number(key))}
+        />
 
         {/* Occasion : sélecteur en verre */}
-        <View style={styles.segmented}>
-          {OCCASIONS.map((o) => (
-            <Pressable
-              key={o.key}
-              onPress={() => setOccasion(o.key)}
-              style={[styles.segment, occasion === o.key && styles.segmentActive]}
-            >
-              <Text style={occasion === o.key ? styles.segmentTextActive : styles.segmentText}>{o.label}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <AnimatedSegmented options={OCCASIONS} value={occasion} onChange={setOccasion} />
         {profile.calendarEnabled && calendarHint && <Text style={styles.calendarHint}>Occasion détectée dans ton calendrier · {OCCASIONS.find((item) => item.key === calendarHint)?.label}</Text>}
 
         <Pressable style={styles.stylistButton} onPress={() => setStylistOpen(true)}>
@@ -511,3 +506,5 @@ const styles = StyleSheet.create({
   },
   btnText: { color: Palette.onAccent, fontWeight: '600' },
 });
+
+// ajout accessoir + diff entre haut et bas sur une photo 
