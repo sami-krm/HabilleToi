@@ -6,6 +6,8 @@ export const TYPE_LABELS: Record<ClothingType, string> = {
   veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
   pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
   chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
+  sac: 'Sac', ceinture: 'Ceinture', casquette: 'Casquette', lunettes: 'Lunettes de soleil',
+  gants: 'Gants', montre: 'Montre', bijoux: 'Bijoux',
 };
 
 export const TYPE_PLURALS: Record<ClothingType, string> = {
@@ -13,9 +15,17 @@ export const TYPE_PLURALS: Record<ClothingType, string> = {
   veste_legere: 'Vestes légères', veste_epaisse: 'Vestes chaudes',
   pantalon: 'Pantalons', short: 'Shorts', jupe: 'Jupes', robe: 'Robes',
   chaussures: 'Chaussures', echarpe: 'Écharpes', bonnet: 'Bonnets', parapluie: 'Parapluies',
+  sac: 'Sacs', ceinture: 'Ceintures', casquette: 'Casquettes', lunettes: 'Lunettes',
+  gants: 'Gants', montre: 'Montres', bijoux: 'Bijoux',
 };
 
 export const TYPE_ORDER = Object.keys(TYPE_LABELS) as ClothingType[];
+
+/** Accessoires : petites vignettes dans la carte de tenue, facultatifs dans les suggestions. */
+export const ACCESSORY_TYPES: ClothingType[] = [
+  'chaussures', 'echarpe', 'bonnet', 'parapluie', 'sac', 'ceinture', 'casquette', 'lunettes', 'gants', 'montre', 'bijoux',
+];
+export const isAccessory = (t: ClothingType) => ACCESSORY_TYPES.includes(t);
 
 export const JACKET_TYPES: ClothingType[] = ['veste', 'veste_legere', 'veste_epaisse'];
 export const isJacket = (t: ClothingType) => JACKET_TYPES.includes(t);

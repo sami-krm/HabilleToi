@@ -1,16 +1,16 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { Ref } from 'react';
-import { useEffect, useImperativeHandle, useMemo } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-    Easing, Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withTiming,
+    Easing, Extrapolation, interpolate, Keyframe, useAnimatedStyle, useSharedValue, withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { COLOR_HEX, TYPE_LABELS } from '@/constants/clothing';
+import { COLOR_HEX, isAccessory, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import type { IconName } from '@/services/weatherIcon';
 import { allColors, type ClothingItem, type ClothingType, type Outfit } from '@/types';
@@ -33,8 +33,14 @@ interface Props {
   ref?: Ref<SwipeDeckHandle>;
 }
 
-// Accessoires : affichés en vignettes sous les pièces principales
-const ACCESSORIES: ClothingType[] = ['chaussures', 'echarpe', 'bonnet', 'parapluie'];
+interface CardProps extends Props {
+  /** Appelé dès que le choix est fait, avant que la carte ne sorte (déclenche l'animation). */
+  onChoice: (direction: SwipeDirection) => void;
+}
+
+const HEART = '#7C5CFF';
+const CROSS = '#FF3B4E';
+
 // Pièces principales rangées de haut en bas, comme on les porte
 const LAYER_ORDER: ClothingType[] = [
   'veste_epaisse', 'veste', 'veste_legere', 'pull', 'chemise', 'tshirt', 'robe', 'pantalon', 'jupe', 'short',
@@ -48,7 +54,7 @@ const SCREEN_PADDING = 16; // marge latérale de l'écran d'accueil
 function Tile({ item, width, height }: { item: ClothingItem; width: number; height: number }) {
   return (
     <View style={[styles.tile, { width, height }]}>
-      <Image source={{ uri: item.uri }} style={styles.tileImg} />
+      <Image source={{ uri: item.uri }} style={styles.tileImg} resizeMode="contain" />
       <View style={styles.tileChip}>
         <Text style={styles.tileLabel} numberOfLines={1}>{TYPE_LABELS[item.type]}</Text>
         {allColors(item).map((c) => <View key={c} style={[styles.dot, { backgroundColor: COLOR_HEX[c] }]} />)}
@@ -114,18 +120,20 @@ function flyOut(
   direction: SwipeDirection,
   width: number,
   onSwipe: (direction: SwipeDirection) => void,
+  onChoice: (direction: SwipeDirection) => void,
 ) {
   'worklet';
   if (locked.value) return;
   locked.value = true;
   scheduleOnRN(swipeHaptic, direction);
+  scheduleOnRN(onChoice, direction);
   const destination = direction === 'right' ? width * 1.4 : -width * 1.4;
   translateX.value = withTiming(destination, { duration: 220 }, (finished) => {
     if (finished) scheduleOnRN(onSwipe, direction);
   });
 }
 
-function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Props) {
+function SwipeCard({ outfit, hasNext, onSwipe, onChoice, caption, weatherIcon, ref }: CardProps) {
   const { width } = useWindowDimensions();
   const translateX = useSharedValue(0);
   const enter = useSharedValue(0); // 0 → 1 : la carte « monte » depuis la pile
@@ -134,17 +142,17 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
 
   const inner = width - SCREEN_PADDING * 2 - CARD_PADDING * 2;
   const main = outfit.items
-    .filter((i) => !ACCESSORIES.includes(i.type))
+    .filter((i) => !isAccessory(i.type))
     .sort((a, b) => LAYER_ORDER.indexOf(a.type) - LAYER_ORDER.indexOf(b.type));
-  const accessories = outfit.items.filter((i) => ACCESSORIES.includes(i.type));
+  const accessories = outfit.items.filter((i) => isAccessory(i.type));
 
   useEffect(() => {
     enter.value = withTiming(1, { duration: 220, easing: Easing.out(Easing.cubic) });
   }, [enter]);
 
   useImperativeHandle(ref, () => ({
-    swipe: (direction) => flyOut(translateX, locked, direction, width, onSwipe),
-  }), [translateX, locked, width, onSwipe]);
+    swipe: (direction) => flyOut(translateX, locked, direction, width, onSwipe, onChoice),
+  }), [translateX, locked, width, onSwipe, onChoice]);
 
   const pan = useMemo(
     () => Gesture.Pan()
@@ -173,9 +181,9 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
           translateX.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.cubic) });
           return;
         }
-        flyOut(translateX, locked, projected > 0 ? 'right' : 'left', width, onSwipe);
+        flyOut(translateX, locked, projected > 0 ? 'right' : 'left', width, onSwipe, onChoice);
       }),
-    [armed, locked, onSwipe, translateX, width],
+    [armed, locked, onSwipe, onChoice, translateX, width],
   );
 
   const cardStyle = useAnimatedStyle(() => ({
@@ -189,18 +197,15 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
     ],
   }));
 
-  const keepTint = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [0, width * 0.3], [0, 0.18], Extrapolation.CLAMP),
-  }));
-  const skipTint = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [-width * 0.3, 0], [0.18, 0], Extrapolation.CLAMP),
-  }));
-  const keepBadge = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [10, width * 0.25], [0, 1], Extrapolation.CLAMP),
-  }));
-  const skipBadge = useAnimatedStyle(() => ({
-    opacity: interpolate(translateX.value, [-width * 0.25, -10], [1, 0], Extrapolation.CLAMP),
-  }));
+  // Cœur violet (droite) ou croix rouge (gauche) qui grandit au centre de la carte
+  const heartStyle = useAnimatedStyle(() => {
+    const p = interpolate(translateX.value, [10, width * 0.28], [0, 1], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ scale: 0.5 + 0.5 * p }] };
+  });
+  const crossStyle = useAnimatedStyle(() => {
+    const p = interpolate(translateX.value, [-width * 0.28, -10], [1, 0], Extrapolation.CLAMP);
+    return { opacity: p, transform: [{ scale: 0.5 + 0.5 * p }] };
+  });
 
   // La carte de derrière grandit quand on tire celle du dessus
   const plateStyle = useAnimatedStyle(() => {
@@ -220,17 +225,14 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
 
       <GestureDetector gesture={pan}>
         <Animated.View style={[styles.card, cardStyle]}>
-          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: Palette.accent }, keepTint]} />
-          <Animated.View pointerEvents="none" style={[styles.tint, { backgroundColor: Palette.danger }, skipTint]} />
-
-          <Animated.View pointerEvents="none" style={[styles.badge, styles.keepBadge, keepBadge]}>
-            <MaterialCommunityIcons name="heart" size={20} color={Palette.accent} />
-            <Text style={[styles.badgeText, { color: Palette.accent }]}>GARDER</Text>
-          </Animated.View>
-          <Animated.View pointerEvents="none" style={[styles.badge, styles.skipBadge, skipBadge]}>
-            <MaterialCommunityIcons name="close" size={20} color={Palette.danger} />
-            <Text style={[styles.badgeText, { color: Palette.danger }]}>PASSER</Text>
-          </Animated.View>
+          <View pointerEvents="none" style={styles.overlay}>
+            <Animated.View style={[styles.overlayIcon, heartStyle]}>
+              <MaterialCommunityIcons name="heart" size={110} color={HEART} />
+            </Animated.View>
+            <Animated.View style={[styles.overlayIcon, crossStyle]}>
+              <MaterialCommunityIcons name="close-thick" size={110} color={CROSS} />
+            </Animated.View>
+          </View>
 
           <View style={styles.header}>
             <View style={styles.headerChip}>
@@ -246,7 +248,7 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
             <View style={styles.accessories}>
               {accessories.map((item) => (
                 <View key={item.id} style={styles.accessory}>
-                  <Image source={{ uri: item.uri }} style={styles.accessoryImg} />
+                  <Image source={{ uri: item.uri }} style={styles.accessoryImg} resizeMode="contain" />
                   <View style={{ flexShrink: 1 }}>
                     <Text style={styles.accessoryLabel} numberOfLines={1}>{TYPE_LABELS[item.type]}</Text>
                     <View style={styles.dots}>
@@ -270,10 +272,45 @@ function SwipeCard({ outfit, hasNext, onSwipe, caption, weatherIcon, ref }: Prop
   );
 }
 
+// Le cœur ou la croix apparaît, grossit puis tombe vers le bas de l'écran
+const burstKeyframe = new Keyframe({
+  0: { opacity: 0, transform: [{ translateY: 0 }, { scale: 0.4 }] },
+  20: { opacity: 1, transform: [{ translateY: -10 }, { scale: 1.25 }], easing: Easing.out(Easing.back(2)) },
+  45: { opacity: 1, transform: [{ translateY: 0 }, { scale: 1 }] },
+  100: { opacity: 0, transform: [{ translateY: 420 }, { scale: 0.7 }], easing: Easing.in(Easing.cubic) },
+}).duration(900);
+
+function Burst({ direction, onDone }: { direction: SwipeDirection; onDone: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onDone, 950);
+    return () => clearTimeout(timer);
+  }, [onDone]);
+  return (
+    <Animated.View pointerEvents="none" entering={burstKeyframe} style={styles.burst}>
+      <MaterialCommunityIcons
+        name={direction === 'right' ? 'heart' : 'close-thick'}
+        size={120}
+        color={direction === 'right' ? HEART : CROSS}
+      />
+    </Animated.View>
+  );
+}
+
 /** Pile de cartes : la tenue du dessus se glisse, celle de derrière attend. */
 export function OutfitSwipeDeck(props: Props) {
-  // key = une nouvelle carte repart toujours de zéro (position, animation d'entrée, verrou)
-  return <SwipeCard key={keyOf(props.outfit)} {...props} />;
+  const [bursts, setBursts] = useState<{ id: number; direction: SwipeDirection }[]>([]);
+  const onChoice = useCallback((direction: SwipeDirection) => {
+    setBursts((b) => [...b, { id: Date.now(), direction }]);
+  }, []);
+  const removeBurst = useCallback((id: number) => setBursts((b) => b.filter((x) => x.id !== id)), []);
+
+  return (
+    <View>
+      {/* key = une nouvelle carte repart toujours de zéro (position, animation d'entrée, verrou) */}
+      <SwipeCard key={keyOf(props.outfit)} {...props} onChoice={onChoice} />
+      {bursts.map((b) => <Burst key={b.id} direction={b.direction} onDone={() => removeBurst(b.id)} />)}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -295,8 +332,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: GAP },
   wrap: { flexWrap: 'wrap' },
   column: { gap: GAP },
-  tile: { borderRadius: 20, overflow: 'hidden', backgroundColor: Palette.surfaceRaised },
-  tileImg: { width: '100%', height: '100%' },
+  tile: { borderRadius: 20, overflow: 'hidden', backgroundColor: Palette.studio },
+  tileImg: { width: '84%', height: '76%', marginHorizontal: '8%', marginTop: '6%' }, // place pour l'étiquette en bas
   tileChip: {
     position: 'absolute', left: 8, bottom: 8, maxWidth: '90%',
     flexDirection: 'row', alignItems: 'center', gap: 5,
@@ -308,16 +345,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10, flexGrow: 1, minWidth: '45%',
     backgroundColor: Palette.surfaceRaised, borderRadius: 18, padding: 8,
   },
-  accessoryImg: { width: 48, height: 48, borderRadius: 12, backgroundColor: Palette.surfaceSelected },
+  accessoryImg: { width: 48, height: 48, borderRadius: 12, backgroundColor: Palette.studio },
   accessoryLabel: { color: Palette.text, fontSize: 14, fontWeight: '600', marginBottom: 4 },
-  tint: { ...StyleSheet.absoluteFill, zIndex: 1 },
-  badge: {
-    position: 'absolute', top: 18, zIndex: 2, flexDirection: 'row', alignItems: 'center', gap: 4,
-    borderWidth: 2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: Palette.surface,
+  overlay: { ...StyleSheet.absoluteFill, zIndex: 2, alignItems: 'center', justifyContent: 'center' },
+  overlayIcon: {
+    position: 'absolute', width: 170, height: 170, borderRadius: 85,
+    backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 8 },
   },
-  keepBadge: { left: 18, borderColor: Palette.accent, transform: [{ rotate: '-10deg' }] },
-  skipBadge: { right: 18, borderColor: Palette.danger, transform: [{ rotate: '10deg' }] },
-  badgeText: { fontSize: 15, fontWeight: '800' },
+  burst: {
+    position: 'absolute', alignSelf: 'center', top: '35%', zIndex: 10,
+    shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 6 },
+  },
   dots: { flexDirection: 'row', gap: 4 },
   dot: { width: 12, height: 12, borderRadius: 6, borderWidth: 1, borderColor: Palette.hairline },
   note: {

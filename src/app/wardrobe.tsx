@@ -11,7 +11,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import AuroraScreen from '@/components/AuroraScreen';
 import { RoundAction } from '@/components/RoundAction';
 import {
-  COLOR_HEX, COLOR_ORDER, isJacket, STYLE_OPTIONS, TYPE_LABELS, TYPE_ORDER, TYPE_PLURALS,
+  COLOR_HEX, COLOR_ORDER, isAccessory, isJacket, STYLE_OPTIONS, TYPE_LABELS, TYPE_ORDER, TYPE_PLURALS,
 } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import ImportFromShopButton from '@/features/import/ImportFromShopButton';
@@ -20,6 +20,7 @@ import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { loadHistory } from '@/storage/wardrobeStorage';
 import { recognizeClothing } from '@/services/clothingRecognition';
 import { removeClothingBackground } from '@/services/backgroundRemoval';
+import OutfitImportModal from '@/features/outfitImport/OutfitImportModal';
 import { allColors, type ClothingItem, type ClothingType, type ColorName, type Style } from '@/types';
 
 // ---------- Données d'affichage ----------
@@ -95,6 +96,7 @@ export default function WardrobeScreen() {
   const [waterproof, setWaterproof] = useState(false);
   const [batchQueue, setBatchQueue] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [removingBackground, setRemovingBackground] = useState(false);
+  const [outfitImportOpen, setOutfitImportOpen] = useState(false);
 
   // Reconnaissance automatique (uniquement à l'ajout)
   const [analyzing, setAnalyzing] = useState(false);
@@ -126,6 +128,15 @@ export default function WardrobeScreen() {
     } finally {
       if (id === requestId.current) setAnalyzing(false);
     }
+  };
+
+  /** Prépare le formulaire pour une nouvelle photo et lance les analyses automatiques. */
+  const startDraft = (asset: ImagePicker.ImagePickerAsset) => {
+    setType('tshirt'); setSelColors(['noir']); setSelStyles(['casual']); setPattern('uni');
+    setPriceText(''); setWaterproof(false);
+    setAiApplied(false); setAiFailed(false);
+    setDraftUri(asset.uri);
+    if (asset.base64) runRecognition(asset.base64, asset.mimeType ?? 'image/jpeg');
   };
 
   const closeForm = () => {
@@ -192,12 +203,7 @@ export default function WardrobeScreen() {
 
       // Réinitialise le formulaire avant d'ouvrir la fenêtre
       setEditingId(null);
-      setType('tshirt'); setSelColors(['noir']); setSelStyles(['casual']); setPattern('uni');
-      setPriceText(''); setWaterproof(false);
-      setAiApplied(false); setAiFailed(false);
-      setDraftUri(asset.uri);
-
-      if (asset.base64) runRecognition(asset.base64, asset.mimeType ?? 'image/jpeg');
+      startDraft(asset);
     } catch {
       Alert.alert('Indisponible', 'Caméra indisponible (simulateur ?). Utilise la galerie.');
     }
@@ -262,9 +268,7 @@ export default function WardrobeScreen() {
     if (batchQueue.length > 0) {
       const [next, ...remaining] = batchQueue;
       setBatchQueue(remaining);
-      setType('tshirt'); setSelColors(['noir']); setSelStyles(['casual']); setPattern('uni'); setPriceText(''); setWaterproof(false);
-      setAiApplied(false); setAiFailed(false); setDraftUri(next.uri);
-      if (next.base64) runRecognition(next.base64, next.mimeType ?? 'image/jpeg');
+      startDraft(next);
     } else closeForm();
   };
 
@@ -330,6 +334,7 @@ export default function WardrobeScreen() {
         <View style={styles.roundActions}>
           <RoundAction icon="camera" label="Photo" onPress={() => pickImage('camera')} />
           <RoundAction icon="image-multiple" label="Galerie" onPress={() => pickImage('library')} />
+          <RoundAction icon="human-handsup" label="Tenue" onPress={() => setOutfitImportOpen(true)} />
           <ImportFromShopButton onImported={reload} />
           <RoundAction icon="chart-donut" label="Stats" onPress={showStats} />
         </View>
@@ -431,7 +436,7 @@ export default function WardrobeScreen() {
         }
         renderItem={({ item }) => (
           <Pressable style={[styles.card, !item.clean && styles.cardDirty]} onPress={() => openEdit(item)}>
-            <Image source={{ uri: item.uri }} style={styles.cardImg} />
+            <Image source={{ uri: item.uri }} style={styles.cardImg} resizeMode="contain" />
             <View style={styles.cardInfo}>
               {allColors(item).map((c) => (
                 <View key={c} style={[styles.dot, { backgroundColor: COLOR_HEX[c] }]} />
@@ -453,6 +458,8 @@ export default function WardrobeScreen() {
         )}
       />
 
+      <OutfitImportModal visible={outfitImportOpen} onClose={() => setOutfitImportOpen(false)} onImported={reload} />
+
       {/* Fenêtre d'ajout / de modification : type, couleurs, style, motif */}
       <Modal visible={draftUri !== null} animationType="slide" onRequestClose={closeForm}>
         <SafeAreaProvider>
@@ -460,7 +467,11 @@ export default function WardrobeScreen() {
             <ScrollView contentContainerStyle={styles.form}>
               <Text style={styles.formTitle}>{editingId ? 'Modifier le vêtement' : batchQueue.length ? `Vêtement · ${batchQueue.length + 1} photos restantes` : 'Nouveau vêtement'}</Text>
 
-              {draftUri && <Image source={{ uri: draftUri }} style={styles.preview} />}
+              {draftUri && (
+                <View style={styles.previewWrap}>
+                  <Image source={{ uri: draftUri }} style={styles.preview} resizeMode="contain" />
+                </View>
+              )}
               <Pressable
                 style={[styles.btn, styles.btnGhost, styles.cutoutButton]}
                 onPress={applyBackgroundRemoval}
@@ -472,7 +483,7 @@ export default function WardrobeScreen() {
                   : <MaterialCommunityIcons name="image-filter-center-focus-strong-outline" size={18} color={Palette.accent} />}
                 <Text style={styles.btnGhostText}>{removingBackground ? 'Détourage en cours…' : 'Retirer le fond'}</Text>
               </Pressable>
-              <Text style={styles.cutoutHint}>La photo est envoyée au service de détourage après ton appui. Connecte-toi dans Profil &gt; Synchronisation en ligne.</Text>
+              <Text style={styles.cutoutHint}>La photo est envoyée au service de détourage après ton appui. Il faut être connecté à ton compte (Profil).</Text>
 
               {/* Bandeau de reconnaissance automatique (ajout uniquement) */}
               {analyzing && (
@@ -491,9 +502,13 @@ export default function WardrobeScreen() {
                 <Text style={styles.note}>Reconnaissance indisponible, remplis les champs à la main.</Text>
               )}
 
-              <Text style={styles.label}>Type</Text>
+              <Text style={styles.label}>Vêtement</Text>
               <View style={styles.chips}>
-                {TYPE_ORDER.map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
+                {TYPE_ORDER.filter((t) => !isAccessory(t)).map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
+              </View>
+              <Text style={styles.label}>Accessoire</Text>
+              <View style={styles.chips}>
+                {TYPE_ORDER.filter(isAccessory).map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
               </View>
 
               <Text style={styles.label}>Couleurs</Text>
@@ -619,7 +634,7 @@ const styles = StyleSheet.create({
   btnGhostText: { color: Palette.text, fontWeight: '600' },
   card: { flex: 1, backgroundColor: Palette.surface, borderRadius: 22, padding: 10, gap: 8 },
   cardDirty: { opacity: 0.6 },
-  cardImg: { width: '100%', aspectRatio: 1, borderRadius: 12, backgroundColor: Palette.surfaceRaised },
+  cardImg: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: Palette.studio },
   cardInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   dot: { width: 14, height: 14, borderRadius: 7, borderWidth: 1, borderColor: Palette.hairline },
   cardLabel: { flexShrink: 1, marginLeft: 2, color: Palette.text },
@@ -632,8 +647,9 @@ const styles = StyleSheet.create({
   form: { padding: 20, gap: 12, paddingBottom: 40 },
   formTitle: { fontSize: 22, fontWeight: '700', color: Palette.text },
   formInput: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: Palette.surfaceRaised, color: Palette.text },
-  preview: { width: '100%', aspectRatio: 1, borderRadius: 18, backgroundColor: Palette.surfaceRaised },
+  preview: { width: '100%', aspectRatio: 1 },
   cutoutButton: { alignSelf: 'center' },
+  previewWrap: { borderRadius: 18, overflow: 'hidden', backgroundColor: Palette.studio, padding: 16 },
   cutoutHint: { color: Palette.textSecondary, textAlign: 'center', fontSize: 12, marginTop: -4 },
   banner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,

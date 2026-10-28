@@ -63,6 +63,7 @@ const REPEAT_WEIGHT: Record<ClothingType, number> = {
   tshirt: 1, chemise: 1, pantalon: 0.6, short: 0.6, jupe: 0.6, robe: 1,
   pull: 0.5, veste: 0, veste_legere: 0, veste_epaisse: 0, chaussures: 0,
   echarpe: 0, bonnet: 0, parapluie: 0,
+  sac: 0, ceinture: 0, casquette: 0, lunettes: 0, gants: 0, montre: 0, bijoux: 0,
 };
 
 /** Pénalité pour les vêtements portés récemment (aujourd'hui/hier > avant-hier > il y a 3 jours). */
@@ -168,6 +169,18 @@ export function generateOutfit(
   const hats = plan.needHat ? candidates(['bonnet'], 'Bonnet', false) : [];
   const umbrellas = plan.needUmbrella ? candidates(['parapluie'], 'Parapluie', false) : [];
 
+  // Accessoires facultatifs : ajoutés au hasard, ou selon la météo (soleil, grand froid)
+  const t = weather.temperature;
+  const sunny = (weather.weatherCode ?? 3) <= 1 && weather.isDay !== false;
+  const extras: { items: ClothingItem[]; chance: number; withDress?: boolean }[] = [
+    { items: candidates(['sac'], 'Sac', false), chance: 0.7, withDress: true },
+    { items: candidates(['ceinture'], 'Ceinture', false), chance: 0.4, withDress: false },
+    { items: candidates(['montre', 'bijoux'], 'Bijou', false), chance: 0.5, withDress: true },
+    ...(sunny && t >= 16 ? [{ items: candidates(['lunettes'], 'Lunettes', false), chance: 0.9, withDress: true }] : []),
+    ...(sunny && t >= 22 ? [{ items: candidates(['casquette'], 'Casquette', false), chance: 0.4, withDress: true }] : []),
+    ...(t < 6 ? [{ items: candidates(['gants'], 'Gants', false), chance: 0.9, withDress: true }] : []),
+  ].filter((e) => e.items.length > 0);
+
   // Une robe compose une tenue complète ; sinon il faut un haut et un bas.
   if ((tops.length === 0 || bottoms.length === 0) && dresses.length === 0) {
     notes.push('Ajoute une robe complète ou au moins un haut et un bas propres.');
@@ -202,6 +215,10 @@ export function generateOutfit(
       if (scarves.length) items.push(pick(scarves));
       if (hats.length) items.push(pick(hats));
       if (umbrellas.length) items.push(pick(umbrellas));
+      for (const extra of extras) {
+        if ((useDress && !extra.withDress) || Math.random() >= extra.chance) continue;
+        items.push(pick(extra.items));
+      }
 
       const sig = signature(items);
       if (seen.has(sig) || blocked.has(sig)) continue;

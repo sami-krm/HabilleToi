@@ -2,7 +2,9 @@ export type ClothingType =
   | 'tshirt' | 'chemise' | 'pull'
   | 'veste' | 'veste_legere' | 'veste_epaisse'
   | 'pantalon' | 'short' | 'jupe' | 'robe' | 'chaussures'
-  | 'echarpe' | 'bonnet' | 'parapluie';
+  | 'echarpe' | 'bonnet' | 'parapluie'
+  // Accessoires
+  | 'sac' | 'ceinture' | 'casquette' | 'lunettes' | 'gants' | 'montre' | 'bijoux';
 
 export type Style = 'sport' | 'casual' | 'formel' | 'soiree';
 

@@ -19,6 +19,7 @@ export const Palette = {
   ink: '#3A3A3C',                           // pastille sélectionnée des sélecteurs
   shadow: '#000000',
   overlay: 'rgba(255,255,255,0.16)',        // boutons translucides posés sur le dégradé
+  studio: '#F2F2F4',                        // fond clair des photos de vêtements, comme une fiche produit
 } as const;
 
 /** Dégradé du haut d'écran : violet lumineux qui se fond dans le noir. */

@@ -37,11 +37,8 @@ const hasAny = (text: string, words: string[]) => words.some((w) => findWord(tex
 
 // ---------- Ce qui n'est pas un vêtement géré par l'app ----------
 const OTHER_WORDS = [
-  // sacs et accessoires
-  'sac$', 'sac a dos', 'sacoche', 'backpack', 'bag$', 'cartable', 'banane$', 'pochette', 'portefeuille', 'wallet', 'valise',
-  'ceinture', 'belt$', 'casquette', 'cap$', 'bob$', 'chapeau', 'gant$',
-  'lunettes', 'sunglasses', 'montre', 'watch$', 'bijou', 'collier', 'bracelet', 'bague', 'boucles d oreilles', 'cravate', 'noeud papillon',
-  'porte cle',
+  // petite maroquinerie et accessoires non gérés (sacs, ceintures, lunettes... sont des accessoires du dressing)
+  'portefeuille', 'wallet', 'valise', 'cravate', 'noeud papillon', 'porte cle',
   // beauté, entretien, maison
   'parfum', 'eau de toilette', 'deodorant', 'deo$', 'gel douche', 'shampoing', 'shampoo', 'creme hydratante', 'creme solaire', 'creme visage', 'face cream', 'hand cream', 'lotion', 'savon',
   'soin', 'maquillage', 'rasoir', 'brosse', 'serviette', 'bougie', 'coque', 'cable usb', 'cable de charge', 'chargeur', 'carte cadeau', 'gift card',
@@ -57,6 +54,14 @@ const OTHER_WORDS = [
 
 // ---------- Types de vêtements (l'ordre compte : le plus précis d'abord) ----------
 const TYPE_WORDS: [ClothingType, string[]][] = [
+  // Accessoires d'abord : « sac en jean » ou « ceinture cuir » ne sont pas des vêtements
+  ['lunettes', ['lunettes', 'sunglasses', 'solaires']],
+  ['montre', ['montre', 'watch$']],
+  ['bijoux', ['bijou', 'collier', 'bracelet', 'bague', 'boucles d oreilles', 'earring', 'necklace', 'pendentif']],
+  ['sac', ['sac$', 'sac a', 'sacoche', 'backpack', 'bag$', 'cabas', 'tote$', 'banane$', 'pochette', 'cartable']],
+  ['ceinture', ['ceinture', 'belt$']],
+  ['casquette', ['casquette', 'cap$', 'bob$', 'chapeau', 'bucket hat']],
+  ['gants', ['gant$', 'glove', 'mitaine', 'moufle']],
   ['short', ['short', 'bermuda']],
   ['parapluie', ['parapluie', 'umbrella', 'paraguas']],
   ['bonnet', ['bonnet', 'beanie', 'chapeau en maille']],

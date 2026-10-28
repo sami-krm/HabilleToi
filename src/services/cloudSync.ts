@@ -104,7 +104,7 @@ export async function getCloudSession(): Promise<CloudSession | null> {
 
 export async function getCloudAccessToken(): Promise<string> {
   const session = await getCloudSession();
-  if (!session) throw new Error('Connecte-toi à la synchronisation en ligne pour utiliser le détourage.');
+  if (!session) throw new Error('Connecte-toi à ton compte (Profil) pour utiliser cette fonction.');
   return session.access_token;
 }
 

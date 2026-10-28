@@ -6,6 +6,7 @@ import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
 export const PACK_ORDER: ClothingType[] = [
   'tshirt', 'chemise', 'pull', 'robe', 'pantalon', 'jupe', 'short',
   'veste_legere', 'veste', 'veste_epaisse', 'chaussures', 'echarpe', 'bonnet', 'parapluie',
+  'sac', 'ceinture', 'casquette', 'lunettes', 'gants', 'montre', 'bijoux',
 ];
 
 
@@ -132,6 +133,14 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     echarpe: sweaterDays > 0 && poolOf(['echarpe']).length > 0 ? 1 : 0,
     bonnet: needs.some((n) => n.hat) && poolOf(['bonnet']).length > 0 ? 1 : 0,
     parapluie: needs.some((n) => n.rain) && poolOf(['parapluie']).length > 0 ? 1 : 0,
+    // Accessoires : seulement s'ils sont dans le dressing, jamais signalés comme manquants
+    sac: poolOf(['sac']).length > 0 ? 1 : 0,
+    ceinture: pantalonDays > 0 && poolOf(['ceinture']).length > 0 ? 1 : 0,
+    casquette: hotDays > 0 && poolOf(['casquette']).length > 0 ? 1 : 0,
+    lunettes: hotDays > 0 && poolOf(['lunettes']).length > 0 ? 1 : 0,
+    gants: needs.some((n) => n.hat) && poolOf(['gants']).length > 0 ? 1 : 0,
+    montre: poolOf(['montre']).length > 0 ? 1 : 0,
+    bijoux: 0,
   };
   const wantTops = clamp(Math.ceil(N * 0.7), 1, 8); // on suppose une lessive possible au-delà d'une semaine
 
@@ -166,8 +175,10 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
   const scarves = pickBest(poolOf(['echarpe']), want.echarpe, [...base, ...sweaters], occasionIds, variation);
   const hats = pickBest(poolOf(['bonnet']), want.bonnet, [...base, ...sweaters], occasionIds, variation);
   const umbrellas = pickBest(poolOf(['parapluie']), want.parapluie, [], occasionIds, variation);
+  const extras = (['sac', 'ceinture', 'casquette', 'lunettes', 'gants', 'montre'] as const)
+    .flatMap((type) => pickBest(poolOf([type]), want[type], base, occasionIds, variation));
 
-  const items = [...tops, ...bottoms, ...dresses, ...shoes, ...sweaters, ...jackets, ...scarves, ...hats, ...umbrellas];
+  const items = [...tops, ...bottoms, ...dresses, ...shoes, ...sweaters, ...jackets, ...scarves, ...hats, ...umbrellas, ...extras];
 
   // ----- Remarques sur ce qui manque -----
   const got: Record<ClothingType, number> = {
@@ -185,6 +196,13 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     echarpe: scarves.length,
     bonnet: hats.length,
     parapluie: umbrellas.length,
+    sac: extras.filter((i) => i.type === 'sac').length,
+    ceinture: extras.filter((i) => i.type === 'ceinture').length,
+    casquette: extras.filter((i) => i.type === 'casquette').length,
+    lunettes: extras.filter((i) => i.type === 'lunettes').length,
+    gants: extras.filter((i) => i.type === 'gants').length,
+    montre: extras.filter((i) => i.type === 'montre').length,
+    bijoux: 0,
   };
   const needsByType: Partial<Record<ClothingType, number>> = {
     pantalon: want.pantalon, short: want.short, jupe: want.jupe, robe: want.robe,
