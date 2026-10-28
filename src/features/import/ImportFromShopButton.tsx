@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { RoundAction } from '@/components/RoundAction';
 import { loadProfile } from '@/features/onboarding/profile';
@@ -36,7 +37,9 @@ export default function ImportFromShopButton({ onImported }: { onImported: () =>
         onDismiss={() => console.log('[cycle] Modal fermé côté iOS')}
       >
         {/* Rendu seulement quand la fenêtre est ouverte : l'état de l'import repart de zéro à chaque fois */}
-        {open && <ShopImport standalone shopIds={favoriteIds} onBack={close} onDone={close} />}
+        <SafeAreaProvider>
+          {open && <ShopImport standalone shopIds={favoriteIds} onBack={close} onDone={close} />}
+        </SafeAreaProvider>
       </Modal>
     </>
   );

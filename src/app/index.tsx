@@ -8,7 +8,6 @@ import {
 
 import { AnimatedSegmented } from '@/components/AnimatedSegmented';
 import AuroraScreen from '@/components/AuroraScreen';
-import { ListRow } from '@/components/ListRow';
 import { OutfitSwipeDeck } from '@/components/OutfitSwipeDeck';
 import type { SwipeDeckHandle, SwipeDirection } from '@/components/OutfitSwipeDeck';
 import ProfileModal from '@/components/ProfileModal';
@@ -24,7 +23,7 @@ import { useWardrobe } from '@/hooks/useWardrobe';
 import { generateOutfit, outfitSignature } from '@/services/outfitGenerator';
 import { refreshMorningReminders } from '@/services/morningReminder';
 import { getCurrentWeather, saveLocation, WeatherError, type SavedLocation } from '@/services/weatherService';
-import { weatherVisual } from '@/services/weatherIcon';
+import { type IconName, weatherVisual } from '@/services/weatherIcon';
 import { findCalendarOccasion } from '@/services/calendarOccasion';
 import { updateDailyOutfitWidget } from '@/widgets/updateDailyOutfitWidget';
 import { loadFavorites, loadHistory, saveFavorites } from '@/storage/wardrobeStorage';
@@ -332,13 +331,24 @@ export default function HomeScreen() {
         {/* Grande température au centre, comme un solde */}
         <View style={styles.hero}>
           <Text style={styles.heroLabel} numberOfLines={1}>{weather.city?.split(',')[0] ?? 'Ma position'} · {visual.label}</Text>
-          <View style={styles.heroTempRow}>
-            <Text style={styles.heroTemp} numberOfLines={1} adjustsFontSizeToFit>{toUnit(weather.temperature)}</Text>
-            <Text style={styles.heroUnit}>°{profile.unit}</Text>
+          {/* Détails météo de part et d'autre de la température */}
+          <View style={styles.heroRow}>
+            <View style={styles.heroSide}>
+              <HeroStat icon="thermometer" value={`${toUnit(low)}° / ${toUnit(high)}°`} label="Min · max" />
+              <HeroStat icon="weather-pouring" value={`${weather.precipitation} mm`} label={weather.rainTime ? `Vers ${weather.rainTime}` : 'Pas de pluie'} />
+            </View>
+            <View style={styles.heroTempRow}>
+              <Text style={styles.heroTemp} numberOfLines={1} adjustsFontSizeToFit>{toUnit(weather.temperature)}</Text>
+              <Text style={styles.heroUnit}>°{profile.unit}</Text>
+            </View>
+            <View style={[styles.heroSide, styles.heroSideRight]}>
+              <HeroStat icon="weather-windy" value={`${Math.round(weather.windSpeed)} km/h`} label={weather.windSpeed > 30 ? 'Vent fort' : 'Vent calme'} right />
+              <HeroStat icon="account-outline" value={`${toUnit(feels)}°`} label="Ressenti" right />
+            </View>
           </View>
           <View style={styles.heroPill}>
-            <MaterialCommunityIcons name={visual.name} size={18} color={Palette.white} />
-            <Text style={styles.heroPillText}>Ressenti {toUnit(feels)}°</Text>
+            <MaterialCommunityIcons name="lightbulb-on-outline" size={18} color={Palette.white} />
+            <Text style={styles.heroPillText}>{advice}</Text>
           </View>
         </View>
 
@@ -358,37 +368,18 @@ export default function HomeScreen() {
           </Text>
         )}
 
-        {/* Détail de la météo, présenté comme une liste d'opérations */}
-        <View style={styles.listCard}>
-          <ListRow
-            icon="thermometer"
-            tint={Tints.temperature}
-            title="Températures"
-            subtitle="Matin · après-midi"
-            value={`${toUnit(low)}° / ${toUnit(high)}°`}
-          />
-          <ListRow
-            icon="weather-pouring"
-            tint={Tints.rain}
-            title="Pluie"
-            subtitle={weather.rainTime ? `Vers ${weather.rainTime}` : 'Pas de pluie prévue'}
-            value={`${weather.precipitation} mm`}
-          />
-          <ListRow
-            icon="weather-windy"
-            tint={Tints.wind}
-            title="Vent"
-            subtitle={weather.windSpeed > 30 ? 'Fort, couvre-toi' : 'Calme'}
-            value={`${Math.round(weather.windSpeed)} km/h`}
-          />
-          <ListRow icon="lightbulb-on" tint={Tints.advice} title="Conseil" subtitle={advice} />
-        </View>
-
         <Text style={styles.sectionTitle}>{dayTitle}{profile.name ? `, ${profile.name}` : ''}</Text>
 
         {outfit ? (
           <>
-            <OutfitSwipeDeck ref={deckRef} outfit={outfit} hasNext={queue.length > 1} onSwipe={handleSwipe} />
+            <OutfitSwipeDeck
+              ref={deckRef}
+              outfit={outfit}
+              hasNext={queue.length > 1}
+              onSwipe={handleSwipe}
+              caption={`${toUnit(weather.temperature)}° · ${STYLE_OPTIONS.find((o) => o.key === occasion)?.label ?? ''}`}
+              weatherIcon={visual.name}
+            />
             <View style={styles.swipeRow}>
               <Pressable style={styles.swipeBtn} onPress={() => deckRef.current?.swipe('left')} accessibilityLabel="Passer cette tenue">
                 <MaterialCommunityIcons name="close" size={26} color={Palette.text} />
@@ -430,13 +421,16 @@ export default function HomeScreen() {
   );
 }
 
-// Pastilles colorées des lignes météo
-const Tints = {
-  temperature: '#A8735A',
-  rain: '#3B82F6',
-  wind: '#1FBF8F',
-  advice: '#7C5CFF',
-};
+/** Petite info météo affichée à côté de la grande température. */
+function HeroStat({ icon, value, label, right }: { icon: IconName; value: string; label: string; right?: boolean }) {
+  return (
+    <View style={[styles.stat, right && styles.statRight]}>
+      <View style={styles.statIcon}><MaterialCommunityIcons name={icon} size={16} color={Palette.white} /></View>
+      <Text style={[styles.statValue, right && styles.textRight]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
+      <Text style={[styles.statLabel, right && styles.textRight]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 140, gap: 18 }, // marge basse : barre d'onglets
@@ -461,21 +455,31 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center',
   },
 
-  hero: { alignItems: 'center', paddingTop: 56, paddingBottom: 40, gap: 6 },
+  hero: { alignItems: 'center', paddingTop: 36, paddingBottom: 28, gap: 10 },
   heroLabel: { color: Palette.white, fontSize: 17, fontWeight: '500', opacity: 0.9 },
-  heroTempRow: { flexDirection: 'row', alignItems: 'flex-end' },
-  heroTemp: { color: Palette.white, fontSize: 84, lineHeight: 92, fontWeight: '700', letterSpacing: -2 },
-  heroUnit: { color: Palette.white, fontSize: 30, fontWeight: '700', marginBottom: 14, marginLeft: 4 },
-  heroPill: {
-    marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 20, paddingVertical: 12, borderRadius: 999, backgroundColor: Palette.overlay,
+  heroRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch' },
+  heroSide: { width: 96, gap: 16 },
+  heroSideRight: { alignItems: 'flex-end' },
+  heroTempRow: { flex: 1, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
+  heroTemp: { color: Palette.white, fontSize: 80, lineHeight: 88, fontWeight: '700', letterSpacing: -2, flexShrink: 1 },
+  heroUnit: { color: Palette.white, fontSize: 26, fontWeight: '700', marginBottom: 14, marginLeft: 2 },
+  stat: { gap: 2 },
+  statRight: { alignItems: 'flex-end' },
+  statIcon: {
+    width: 28, height: 28, borderRadius: 14, backgroundColor: Palette.overlay,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 4,
   },
-  heroPillText: { color: Palette.white, fontSize: 16, fontWeight: '600' },
+  statValue: { color: Palette.white, fontSize: 16, fontWeight: '700' },
+  statLabel: { color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: '500' },
+  textRight: { textAlign: 'right' },
+  heroPill: {
+    marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%',
+    paddingHorizontal: 18, paddingVertical: 11, borderRadius: 999, backgroundColor: Palette.overlay,
+  },
+  heroPillText: { color: Palette.white, fontSize: 14, fontWeight: '600', flexShrink: 1 },
 
   actionsRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },
   calendarHint: { color: Palette.accent, fontSize: 13, fontWeight: '600', marginTop: -8, textAlign: 'center' },
-
-  listCard: { backgroundColor: Palette.surface, borderRadius: 28, paddingHorizontal: 18, paddingVertical: 8 },
 
   sectionTitle: { fontSize: 22, fontWeight: '700', color: Palette.text, letterSpacing: -0.4, marginTop: 6 },
   swipeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 },

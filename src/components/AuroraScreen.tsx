@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { type Animated, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { type Animated, StyleSheet } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import AuroraBackground from '@/components/AuroraBackground';
 import { Palette } from '@/constants/theme';
@@ -14,10 +14,11 @@ interface Props {
 
 export default function AuroraScreen({ children, variant, scrollY }: Props) {
   return (
-    <View style={styles.root}>
+    // Fournisseur local : une fenêtre Modal ne reçoit pas les marges de l'écran principal
+    <SafeAreaProvider style={styles.root}>
       <AuroraBackground variant={variant} scrollY={scrollY} />
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>{children}</SafeAreaView>
-    </View>
+    </SafeAreaProvider>
   );
 }
 

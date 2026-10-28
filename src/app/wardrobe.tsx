@@ -6,7 +6,7 @@ import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import AuroraScreen from '@/components/AuroraScreen';
 import { RoundAction } from '@/components/RoundAction';
@@ -455,104 +455,106 @@ export default function WardrobeScreen() {
 
       {/* Fenêtre d'ajout / de modification : type, couleurs, style, motif */}
       <Modal visible={draftUri !== null} animationType="slide" onRequestClose={closeForm}>
-        <SafeAreaView style={styles.safe}>
-          <ScrollView contentContainerStyle={styles.form}>
-            <Text style={styles.formTitle}>{editingId ? 'Modifier le vêtement' : batchQueue.length ? `Vêtement · ${batchQueue.length + 1} photos restantes` : 'Nouveau vêtement'}</Text>
+        <SafeAreaProvider>
+          <SafeAreaView style={styles.safe}>
+            <ScrollView contentContainerStyle={styles.form}>
+              <Text style={styles.formTitle}>{editingId ? 'Modifier le vêtement' : batchQueue.length ? `Vêtement · ${batchQueue.length + 1} photos restantes` : 'Nouveau vêtement'}</Text>
 
-            {draftUri && <Image source={{ uri: draftUri }} style={styles.preview} />}
-            <Pressable
-              style={[styles.btn, styles.btnGhost, styles.cutoutButton]}
-              onPress={applyBackgroundRemoval}
-              disabled={removingBackground || !draftUri}
-              accessibilityRole="button"
-            >
-              {removingBackground
-                ? <ActivityIndicator size="small" />
-                : <MaterialCommunityIcons name="image-filter-center-focus-strong-outline" size={18} color={Palette.accent} />}
-              <Text style={styles.btnGhostText}>{removingBackground ? 'Détourage en cours…' : 'Retirer le fond'}</Text>
-            </Pressable>
-            <Text style={styles.cutoutHint}>La photo est envoyée au service de détourage après ton appui. Connecte-toi dans Profil &gt; Synchronisation en ligne.</Text>
+              {draftUri && <Image source={{ uri: draftUri }} style={styles.preview} />}
+              <Pressable
+                style={[styles.btn, styles.btnGhost, styles.cutoutButton]}
+                onPress={applyBackgroundRemoval}
+                disabled={removingBackground || !draftUri}
+                accessibilityRole="button"
+              >
+                {removingBackground
+                  ? <ActivityIndicator size="small" />
+                  : <MaterialCommunityIcons name="image-filter-center-focus-strong-outline" size={18} color={Palette.accent} />}
+                <Text style={styles.btnGhostText}>{removingBackground ? 'Détourage en cours…' : 'Retirer le fond'}</Text>
+              </Pressable>
+              <Text style={styles.cutoutHint}>La photo est envoyée au service de détourage après ton appui. Connecte-toi dans Profil &gt; Synchronisation en ligne.</Text>
 
-            {/* Bandeau de reconnaissance automatique (ajout uniquement) */}
-            {analyzing && (
-              <View style={styles.banner}>
-                <ActivityIndicator size="small" />
-                <Text style={styles.bannerText}>Analyse du vêtement en cours…</Text>
+              {/* Bandeau de reconnaissance automatique (ajout uniquement) */}
+              {analyzing && (
+                <View style={styles.banner}>
+                  <ActivityIndicator size="small" />
+                  <Text style={styles.bannerText}>Analyse du vêtement en cours…</Text>
+                </View>
+              )}
+              {aiApplied && !analyzing && (
+                <View style={styles.banner}>
+                  <MaterialCommunityIcons name="creation" size={18} color={Palette.accent} />
+                  <Text style={styles.bannerText}>Suggestion automatique : vérifie et corrige si besoin.</Text>
+                </View>
+              )}
+              {aiFailed && !analyzing && (
+                <Text style={styles.note}>Reconnaissance indisponible, remplis les champs à la main.</Text>
+              )}
+
+              <Text style={styles.label}>Type</Text>
+              <View style={styles.chips}>
+                {TYPE_ORDER.map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
               </View>
-            )}
-            {aiApplied && !analyzing && (
-              <View style={styles.banner}>
-                <MaterialCommunityIcons name="creation" size={18} color={Palette.accent} />
-                <Text style={styles.bannerText}>Suggestion automatique : vérifie et corrige si besoin.</Text>
+
+              <Text style={styles.label}>Couleurs</Text>
+              <Text style={styles.hintInline}>
+                Touche jusqu&apos;à {MAX_COLORS} couleurs. Le numéro 1 est la couleur principale.
+              </Text>
+              <View style={styles.swatches}>
+                {COLOR_ORDER.map((c) => {
+                  const rank = selColors.indexOf(c); // -1 si non sélectionnée
+                  return (
+                    <Pressable key={c} onPress={() => toggleColor(c)} style={styles.swatchWrap}>
+                      <View>
+                        <View style={[styles.swatch, { backgroundColor: COLOR_HEX[c] }, rank >= 0 && styles.swatchActive]} />
+                        {rank >= 0 && (
+                          <View style={styles.badge}>
+                            <Text style={styles.badgeText}>{rank + 1}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.swatchLabel}>{c}</Text>
+                    </Pressable>
+                  );
+                })}
               </View>
-            )}
-            {aiFailed && !analyzing && (
-              <Text style={styles.note}>Reconnaissance indisponible, remplis les champs à la main.</Text>
-            )}
 
-            <Text style={styles.label}>Type</Text>
-            <View style={styles.chips}>
-              {TYPE_ORDER.map((t) => <Chip key={t} label={TYPE_LABELS[t]} active={type === t} onPress={() => setType(t)} />)}
-            </View>
+              <Text style={styles.label}>Occasions</Text>
+              <View style={styles.chips}>
+                {STYLE_OPTIONS.map((s) => (
+                  <Chip key={s.key} label={s.label} active={selStyles.includes(s.key)} onPress={() => toggleStyle(s.key)} />
+                ))}
+              </View>
 
-            <Text style={styles.label}>Couleurs</Text>
-            <Text style={styles.hintInline}>
-              Touche jusqu&apos;à {MAX_COLORS} couleurs. Le numéro 1 est la couleur principale.
-            </Text>
-            <View style={styles.swatches}>
-              {COLOR_ORDER.map((c) => {
-                const rank = selColors.indexOf(c); // -1 si non sélectionnée
-                return (
-                  <Pressable key={c} onPress={() => toggleColor(c)} style={styles.swatchWrap}>
-                    <View>
-                      <View style={[styles.swatch, { backgroundColor: COLOR_HEX[c] }, rank >= 0 && styles.swatchActive]} />
-                      {rank >= 0 && (
-                        <View style={styles.badge}>
-                          <Text style={styles.badgeText}>{rank + 1}</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={styles.swatchLabel}>{c}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+              <Text style={styles.label}>Motif</Text>
+              <View style={styles.chips}>
+                <Chip label="Uni" active={pattern === 'uni'} onPress={() => setPattern('uni')} />
+                <Chip label="À motifs" active={pattern === 'motif'} onPress={() => setPattern('motif')} />
+              </View>
 
-            <Text style={styles.label}>Occasions</Text>
-            <View style={styles.chips}>
-              {STYLE_OPTIONS.map((s) => (
-                <Chip key={s.key} label={s.label} active={selStyles.includes(s.key)} onPress={() => toggleStyle(s.key)} />
-              ))}
-            </View>
+              <Text style={styles.label}>Prix payé (facultatif, en €)</Text>
+              <TextInput style={styles.formInput} keyboardType="decimal-pad" value={priceText} onChangeText={setPriceText} placeholder="0,00" placeholderTextColor={Palette.textSecondary} />
+              {isJacket(type) && <Chip label={waterproof ? 'Veste imperméable ✓' : 'Veste imperméable ?'} active={waterproof} onPress={() => setWaterproof((value) => !value)} />}
 
-            <Text style={styles.label}>Motif</Text>
-            <View style={styles.chips}>
-              <Chip label="Uni" active={pattern === 'uni'} onPress={() => setPattern('uni')} />
-              <Chip label="À motifs" active={pattern === 'motif'} onPress={() => setPattern('motif')} />
-            </View>
+              <View style={styles.actions}>
+                <Pressable style={[styles.btn, styles.btnGhost]} onPress={closeForm}>
+                  <Text style={styles.btnGhostText}>Annuler</Text>
+                </Pressable>
+                <Pressable style={styles.btn} onPress={save}>
+                  <Text style={styles.btnText}>Enregistrer</Text>
+                </Pressable>
+              </View>
 
-            <Text style={styles.label}>Prix payé (facultatif, en €)</Text>
-            <TextInput style={styles.formInput} keyboardType="decimal-pad" value={priceText} onChangeText={setPriceText} placeholder="0,00" placeholderTextColor={Palette.textSecondary} />
-            {isJacket(type) && <Chip label={waterproof ? 'Veste imperméable ✓' : 'Veste imperméable ?'} active={waterproof} onPress={() => setWaterproof((value) => !value)} />}
-
-            <View style={styles.actions}>
-              <Pressable style={[styles.btn, styles.btnGhost]} onPress={closeForm}>
-                <Text style={styles.btnGhostText}>Annuler</Text>
-              </Pressable>
-              <Pressable style={styles.btn} onPress={save}>
-                <Text style={styles.btnText}>Enregistrer</Text>
-              </Pressable>
-            </View>
-
-            {/* Suppression : uniquement en modification */}
-            {editingId && (
-              <Pressable style={styles.deleteBtn} onPress={confirmDelete}>
-                <MaterialCommunityIcons name="trash-can-outline" size={18} color={Palette.danger} />
-                <Text style={styles.deleteText}>Supprimer ce vêtement</Text>
-              </Pressable>
-            )}
-          </ScrollView>
-        </SafeAreaView>
+              {/* Suppression : uniquement en modification */}
+              {editingId && (
+                <Pressable style={styles.deleteBtn} onPress={confirmDelete}>
+                  <MaterialCommunityIcons name="trash-can-outline" size={18} color={Palette.danger} />
+                  <Text style={styles.deleteText}>Supprimer ce vêtement</Text>
+                </Pressable>
+              )}
+            </ScrollView>
+          </SafeAreaView>
+        </SafeAreaProvider>
       </Modal>
     </AuroraScreen>
   );
