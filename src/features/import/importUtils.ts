@@ -25,7 +25,9 @@ export interface FoundItem {
 
 export const TYPE_LABELS: Record<ClothingType, string> = {
   tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  pantalon: 'Pantalon', short: 'Short', chaussures: 'Chaussures',
+  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
+  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
+  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
 };
 export const TYPE_ORDER = Object.keys(TYPE_LABELS) as ClothingType[];
 

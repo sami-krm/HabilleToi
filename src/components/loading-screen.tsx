@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'react-native';
 
 import AuroraBackground from '@/components/AuroraBackground';
@@ -8,7 +8,7 @@ import { Glass, Palette } from '@/constants/theme';
 const APP_NAME = 'Tenue du jour'; // à adapter
 
 export default function LoadingScreen() {
-  const pulse = useRef(new Animated.Value(0)).current;
+  const [pulse] = useState(() => new Animated.Value(0));
 
   // Icône qui « respire »
   useEffect(() => {

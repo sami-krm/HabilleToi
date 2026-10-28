@@ -7,6 +7,7 @@ import type { ReminderSettings } from '@/features/notifications/reminderSettings
 import type { DayWeather } from '@/features/trip/tripTypes';
 import { addDaysISO, parseISO, todayISO } from '@/services/tripDates';
 import { getTripWeather } from '@/services/tripWeather';
+import { loadSavedLocation } from '@/services/weatherService';
 
 /**
  * Une notification programmée garde un texte figé. Pour que chaque matin affiche la météo du jour,
@@ -67,6 +68,8 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 
 // ---------- Position et prévision ----------
 async function getCoords(saved: ReminderSettings['coords']) {
+  const manual = await loadSavedLocation();
+  if (manual) return { latitude: manual.latitude, longitude: manual.longitude };
   try {
     const perm = await Location.getForegroundPermissionsAsync();
     if (perm.granted) {

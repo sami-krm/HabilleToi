@@ -1,5 +1,8 @@
 export type ClothingType =
-  | 'tshirt' | 'chemise' | 'pull' | 'veste' | 'pantalon' | 'short' | 'chaussures';
+  | 'tshirt' | 'chemise' | 'pull'
+  | 'veste' | 'veste_legere' | 'veste_epaisse'
+  | 'pantalon' | 'short' | 'jupe' | 'robe' | 'chaussures'
+  | 'echarpe' | 'bonnet' | 'parapluie';
 
 export type Style = 'sport' | 'casual' | 'formel' | 'soiree';
 
@@ -17,6 +20,9 @@ export interface ClothingItem {
   pattern: 'uni' | 'motif';
   clean: boolean;         // false = au sale, jamais proposé
   sourceUrl?: string;     // adresse de l'image d'origine, pour les vêtements importés depuis une boutique
+  price?: number;
+  lastWashedAt?: number;
+  waterproof?: boolean;
 }
 
 /** Toutes les couleurs d'un vêtement, la principale en premier. */
@@ -41,6 +47,13 @@ export interface Weather {
   city?: string;          // lieu de la position utilisée
   weatherCode?: number;   // code météo WMO (0 = ciel dégagé, 3 = couvert, 61 = pluie...)
   isDay?: boolean;        // jour ou nuit à cet endroit
+  date?: string;
+  minTemperature?: number;
+  maxTemperature?: number;
+  apparentTemperature?: number;
+  rainTime?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 /** Une tenue portée un jour donné (enregistrée dans l'historique). */
@@ -48,4 +61,7 @@ export interface WornOutfit {
   id: string;
   itemIds: string[];
   wornAt: number; // horodatage (ms)
+  comfort?: 'too_hot' | 'good' | 'too_cold';
 }
+
+export type ComfortFeedback = 'too_hot' | 'good' | 'too_cold';

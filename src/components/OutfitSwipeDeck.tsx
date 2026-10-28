@@ -37,7 +37,9 @@ const COLOR_HEX: Record<ColorName, string> = {
 
 const TYPE_LABEL: Record<string, string> = {
   tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  pantalon: 'Pantalon', short: 'Short', chaussures: 'Chaussures',
+  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
+  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe', chaussures: 'Chaussures',
+  echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
 };
 
 const BEHIND_SCALE = 0.94;
@@ -98,20 +100,24 @@ function SwipeCard({ outfit, hasNext, onSwipe, ref }: Props) {
       .failOffsetY([-24, 24])
       .onUpdate((e) => {
         if (locked.value) return;
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values must be mutated in gesture worklets.
         translateX.value = e.translationX;
         // Tic haptique à chaque franchissement du seuil (et à chaque retour au-dessus)
         const side = Math.abs(e.translationX) > width * 0.28 ? Math.sign(e.translationX) : 0;
         if (side !== armed.value) {
+          // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values must be mutated in gesture worklets.
           armed.value = side;
           if (side !== 0) scheduleOnRN(tickHaptic);
         }
       })
       .onEnd((e) => {
         if (locked.value) return;
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values must be mutated in gesture worklets.
         armed.value = 0;
         // On tient compte de la vitesse : un petit coup sec suffit
         const projected = e.translationX + e.velocityX * 0.15;
         if (Math.abs(projected) < width * 0.28) {
+          // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values must be mutated in gesture worklets.
           translateX.value = withTiming(0, { duration: 180, easing: Easing.out(Easing.cubic) });
           return;
         }

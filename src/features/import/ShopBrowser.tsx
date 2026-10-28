@@ -76,10 +76,10 @@ export default function ShopBrowser({ shop, foundCount, onItems, onClose, onRevi
       {guideOpen && (
         <View style={styles.guide}>
           <Text style={styles.guideTitle}>Comment importer</Text>
-          <Text style={styles.guideLine}>1. Connecte-toi à ton compte {shop.name}. Tes identifiants restent sur le site : l'app ne les voit pas.</Text>
-          <Text style={styles.guideLine}>2. Ouvre « Mes commandes » (ou « Historique d'achats »).</Text>
+          <Text style={styles.guideLine}>1. Connecte-toi à ton compte {shop.name}. Tes identifiants restent sur le site : l’app ne les voit pas.</Text>
+          <Text style={styles.guideLine}>2. Ouvre « Mes commandes » (ou « Historique d’achats »).</Text>
           <Text style={styles.guideLine}>3. Fais défiler la liste pour charger toutes les images, puis touche « Analyser cette page ».</Text>
-          <Text style={styles.guideLine}>4. Répète sur d'autres pages si besoin, puis touche « Voir les articles ».</Text>
+          <Text style={styles.guideLine}>4. Répète sur d’autres pages si besoin, puis touche « Voir les articles ».</Text>
         </View>
       )}
 

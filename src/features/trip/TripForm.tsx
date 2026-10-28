@@ -53,7 +53,10 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
   useEffect(() => {
     if (place) return;
     const q = query.trim();
-    if (q.length < 2) { setResults([]); return; }
+    if (q.length < 2) {
+      const clearTimer = setTimeout(() => setResults([]), 0);
+      return () => clearTimeout(clearTimer);
+    }
     let cancelled = false;
     const timer = setTimeout(async () => {
       setSearching(true);
@@ -136,7 +139,7 @@ export default function TripForm({ busy, error, wardrobeSize, onSubmit, onCancel
         </View>
 
         {tooSmall && (
-          <Text style={styles.warn}>Ajoute au moins 3 vêtements dans l'onglet Dressing pour composer une valise.</Text>
+          <Text style={styles.warn}>Ajoute au moins 3 vêtements dans l’onglet Dressing pour composer une valise.</Text>
         )}
         {error && <Text style={styles.warn}>{error}</Text>}
       </ScrollView>

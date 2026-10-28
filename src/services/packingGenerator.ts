@@ -2,15 +2,22 @@ import type { DayOutfit, DayWeather } from '@/features/trip/tripTypes';
 import { itemPairScore } from '@/services/outfitGenerator';
 import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
 
-export const PACK_ORDER: ClothingType[] = ['tshirt', 'chemise', 'pull', 'veste', 'pantalon', 'short', 'chaussures'];
+export const PACK_ORDER: ClothingType[] = [
+  'tshirt', 'chemise', 'pull', 'robe', 'pantalon', 'jupe', 'short',
+  'veste_legere', 'veste', 'veste_epaisse', 'chaussures', 'echarpe', 'bonnet', 'parapluie',
+];
 
 const SINGULAR: Record<ClothingType, string> = {
   tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  pantalon: 'Pantalon', short: 'Short', chaussures: 'Chaussures',
+  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
+  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
+  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
 };
 const PLURAL: Record<ClothingType, string> = {
   tshirt: 'T-shirts', chemise: 'Chemises', pull: 'Pulls', veste: 'Vestes',
-  pantalon: 'Pantalons', short: 'Shorts', chaussures: 'Chaussures',
+  veste_legere: 'Vestes légères', veste_epaisse: 'Vestes chaudes',
+  pantalon: 'Pantalons', short: 'Shorts', jupe: 'Jupes', robe: 'Robes',
+  chaussures: 'Chaussures', echarpe: 'Écharpes', bonnet: 'Bonnets', parapluie: 'Parapluies',
 };
 export const typeSingular = (t: ClothingType) => SINGULAR[t];
 export const typePlural = (t: ClothingType) => PLURAL[t];
@@ -28,6 +35,7 @@ interface DayNeed {
   sweater: boolean;
   jacket: boolean;
   rain: boolean;
+  hat: boolean;
 }
 
 function needFor(d: DayWeather): DayNeed {
@@ -36,7 +44,7 @@ function needFor(d: DayWeather): DayNeed {
   const wind = d.windMax > 30;
 
   const bottoms: ClothingType[] =
-    feels >= 24 ? ['short'] : feels >= 21 ? ['short', 'pantalon'] : feels >= 18 ? ['pantalon', 'short'] : ['pantalon'];
+    feels >= 24 ? ['short', 'jupe'] : feels >= 21 ? ['short', 'jupe', 'pantalon'] : feels >= 18 ? ['pantalon', 'jupe', 'short'] : ['pantalon', 'jupe'];
 
   return {
     date: d.date,
@@ -45,6 +53,7 @@ function needFor(d: DayWeather): DayNeed {
     sweater: feels < 18 || d.tMin < 12,
     jacket: rain || wind || feels < 10,
     rain,
+    hat: d.tMin < 5,
   };
 }
 
@@ -117,6 +126,8 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
   // ----- Quantités visées -----
   const shortDays = needs.filter((n) => n.bottoms[0] === 'short').length;
   const pantalonDays = N - shortDays;
+  const hasSkirts = poolOf(['jupe']).length > 0;
+  const hasDresses = poolOf(['robe']).length > 0;
   const hotDays = needs.filter((n) => n.tops.length === 1).length;
   const sweaterDays = needs.filter((n) => n.sweater).length;
   const jacketDays = needs.filter((n) => n.jacket).length;
@@ -125,9 +136,15 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     tshirt: 0, chemise: 0,
     pantalon: pantalonDays > 0 ? clamp(Math.ceil(pantalonDays / 3), 1, 3) : 0,
     short: shortDays > 0 ? clamp(Math.ceil(shortDays / 3), 1, 3) : 0,
+    jupe: hasSkirts ? clamp(Math.ceil(N / 4), 1, 2) : 0,
+    robe: hasDresses && N >= 3 ? 1 : 0,
     pull: sweaterDays > 0 ? clamp(Math.ceil(sweaterDays / 4), 1, 2) : 0,
     veste: jacketDays > 0 ? (jacketDays >= 5 ? 2 : 1) : 0,
+    veste_legere: 0, veste_epaisse: 0,
     chaussures: N <= 3 ? 1 : 2,
+    echarpe: sweaterDays > 0 && poolOf(['echarpe']).length > 0 ? 1 : 0,
+    bonnet: needs.some((n) => n.hat) && poolOf(['bonnet']).length > 0 ? 1 : 0,
+    parapluie: needs.some((n) => n.rain) && poolOf(['parapluie']).length > 0 ? 1 : 0,
   };
   const wantTops = clamp(Math.ceil(N * 0.7), 1, 8); // on suppose une lessive possible au-delà d'une semaine
 
@@ -142,6 +159,7 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
   const bottoms = [
     ...pickBest(poolOf(['pantalon']), want.pantalon, [], occasionIds, variation),
     ...pickBest(poolOf(['short']), want.short, [], occasionIds, variation),
+    ...pickBest(poolOf(['jupe']), want.jupe, [], occasionIds, variation),
   ];
   const shoes = pickBest(poolOf(['chaussures']), want.chaussures, bottoms, occasionIds, variation);
 
@@ -156,9 +174,13 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
 
   const base = [...tops, ...bottoms];
   const sweaters = pickBest(poolOf(['pull']), want.pull, base, occasionIds, variation);
-  const jackets = pickBest(poolOf(['veste']), want.veste, [...base, ...shoes], occasionIds, variation);
+  const dresses = pickBest(poolOf(['robe']), want.robe, [...base, ...shoes], occasionIds, variation);
+  const jackets = pickBest(poolOf(['veste', 'veste_legere', 'veste_epaisse']), want.veste, [...base, ...shoes], occasionIds, variation);
+  const scarves = pickBest(poolOf(['echarpe']), want.echarpe, [...base, ...sweaters], occasionIds, variation);
+  const hats = pickBest(poolOf(['bonnet']), want.bonnet, [...base, ...sweaters], occasionIds, variation);
+  const umbrellas = pickBest(poolOf(['parapluie']), want.parapluie, [], occasionIds, variation);
 
-  const items = [...tops, ...bottoms, ...shoes, ...sweaters, ...jackets];
+  const items = [...tops, ...bottoms, ...dresses, ...shoes, ...sweaters, ...jackets, ...scarves, ...hats, ...umbrellas];
 
   // ----- Remarques sur ce qui manque -----
   const got: Record<ClothingType, number> = {
@@ -166,10 +188,21 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     chemise: otherTops.filter((i) => i.type === 'chemise').length,
     pantalon: bottoms.filter((i) => i.type === 'pantalon').length,
     short: bottoms.filter((i) => i.type === 'short').length,
-    pull: sweaters.length, veste: jackets.length, chaussures: shoes.length,
+    jupe: bottoms.filter((i) => i.type === 'jupe').length,
+    robe: dresses.length,
+    pull: sweaters.length,
+    veste: jackets.length,
+    veste_legere: jackets.filter((i) => i.type === 'veste_legere').length,
+    veste_epaisse: jackets.filter((i) => i.type === 'veste_epaisse').length,
+    chaussures: shoes.length,
+    echarpe: scarves.length,
+    bonnet: hats.length,
+    parapluie: umbrellas.length,
   };
   const needsByType: Partial<Record<ClothingType, number>> = {
-    pantalon: want.pantalon, short: want.short, pull: want.pull, veste: want.veste, chaussures: want.chaussures,
+    pantalon: want.pantalon, short: want.short, jupe: want.jupe, robe: want.robe,
+    pull: want.pull, veste: want.veste, chaussures: want.chaussures,
+    echarpe: want.echarpe, bonnet: want.bonnet, parapluie: want.parapluie,
   };
   for (const [type, n] of Object.entries(needsByType) as [ClothingType, number][]) {
     if (n === 0) continue;
@@ -194,13 +227,13 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
   // ----- Une tenue par jour, sans répéter les mêmes pièces trop souvent -----
   const used = new Map<string, number>();
   const bump = (i: ClothingItem) => used.set(i.id, (used.get(i.id) ?? 0) + 1);
-  const useCount = (i: ClothingItem) => used.get(i.id) ?? 0;
+  const getUseCount = (i: ClothingItem) => used.get(i.id) ?? 0;
 
   const bestOf = (cands: ClothingItem[], outfit: ClothingItem[], repeatWeight: number) => {
     let best: ClothingItem | null = null;
     let bestScore = -Infinity;
     for (const c of cands) {
-      const s = meanScore(c, outfit) - useCount(c) * repeatWeight;
+      const s = meanScore(c, outfit) - getUseCount(c) * repeatWeight;
       if (s > bestScore) { bestScore = s; best = c; }
     }
     return best;
@@ -216,9 +249,25 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     let pairScore = -Infinity;
     for (const t of ts) {
       for (const b of bs) {
-        const s = itemPairScore(t, b) - useCount(t) * 3 - useCount(b) + (b.type === need.bottoms[0] ? 1 : 0);
+        const s = itemPairScore(t, b) - getUseCount(t) * 3 - getUseCount(b) + (b.type === need.bottoms[0] ? 1 : 0);
         if (s > pairScore) { pairScore = s; pair = [t, b]; }
       }
+    }
+    const wearDress = !pair || (dresses.length > 0 && Math.random() < 0.25);
+    if (wearDress) {
+      const dress = bestOf(dresses, [], 3);
+      if (!dress) return { date: need.date, itemIds: [] };
+      const outfit = [dress];
+      const extras = [
+        bestOf(shoes, outfit, 0.5),
+        ...(need.sweater ? [bestOf(sweaters, outfit, 1), bestOf(scarves, outfit, 0.1)] : []),
+        ...(need.jacket ? [bestOf(jackets, outfit, 0.3)] : []),
+        ...(need.hat ? [bestOf(hats, outfit, 0.1)] : []),
+        ...(need.rain ? [bestOf(umbrellas, outfit, 0)] : []),
+      ];
+      for (const extra of extras) if (extra && !outfit.includes(extra)) outfit.push(extra);
+      outfit.forEach(bump);
+      return { date: need.date, itemIds: outfit.map((i) => i.id) };
     }
     if (!pair) return { date: need.date, itemIds: [] };
 
@@ -230,6 +279,9 @@ export function generatePacking({ wardrobe, days, occasions, variation = 0.6 }: 
     add(shoes, 0.5);
     if (need.sweater) add(sweaters, 1);
     if (need.jacket) add(jackets, 0.3);
+    if (need.sweater) add(scarves, 0.1);
+    if (need.hat) add(hats, 0.1);
+    if (need.rain) add(umbrellas, 0);
 
     outfit.forEach(bump);
     return { date: need.date, itemIds: outfit.map((i) => i.id) };

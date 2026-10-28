@@ -1,5 +1,6 @@
 import { daysAgo, signatureOfIds } from '@/services/historyUtils';
 import { allColors } from '@/types';
+import type { OutfitPreferences } from '@/storage/preferences';
 import type {
   ClothingItem, ClothingType, ColorName, Outfit, Style, Weather, WornOutfit,
 } from '@/types';
@@ -58,12 +59,16 @@ const SAME_OUTFIT_DAYS = 6; // la même tenue exacte est écartée si portée da
 
 // Importance de la répétition selon le type : une veste ou des chaussures se reportent sans souci
 const REPEAT_WEIGHT: Record<ClothingType, number> = {
-  tshirt: 1, chemise: 1, pantalon: 0.6, short: 0.6, pull: 0.5, veste: 0, chaussures: 0,
+  tshirt: 1, chemise: 1, pantalon: 0.6, short: 0.6, jupe: 0.6, robe: 1,
+  pull: 0.5, veste: 0, veste_legere: 0, veste_epaisse: 0, chaussures: 0,
+  echarpe: 0, bonnet: 0, parapluie: 0,
 };
 
 const TYPE_NAMES: Record<ClothingType, string> = {
   tshirt: 'T-shirt', chemise: 'Chemise', pull: 'Pull', veste: 'Veste',
-  pantalon: 'Pantalon', short: 'Short', chaussures: 'Chaussures',
+  veste_legere: 'Veste légère', veste_epaisse: 'Veste chaude',
+  pantalon: 'Pantalon', short: 'Short', jupe: 'Jupe', robe: 'Robe',
+  chaussures: 'Chaussures', echarpe: 'Écharpe', bonnet: 'Bonnet', parapluie: 'Parapluie',
 };
 
 /** Pénalité pour les vêtements portés récemment (aujourd'hui/hier > avant-hier > il y a 3 jours). */
@@ -84,6 +89,10 @@ interface Plan {
   tops: ClothingType[];
   needSweater: boolean;
   needJacket: boolean;
+  jacketTypes: ClothingType[];
+  needScarf: boolean;
+  needHat: boolean;
+  needUmbrella: boolean;
 }
 
 function planFromWeather(w: Weather): Plan {
@@ -92,22 +101,32 @@ function planFromWeather(w: Weather): Plan {
   const t = w.temperature;
 
   if (t >= 24) {
-    return { bottoms: ['short'], tops: ['tshirt'], needSweater: false, needJacket: rainy };
+    return {
+      bottoms: ['short', 'jupe', 'pantalon'], tops: ['tshirt'], needSweater: false,
+      needJacket: rainy || windy, jacketTypes: ['veste_legere', 'veste'],
+      needScarf: false, needHat: false, needUmbrella: rainy,
+    };
   }
   if (t >= 18) {
     return {
-      bottoms: ['pantalon', 'short'], tops: ['tshirt', 'chemise'],
-      needSweater: false, needJacket: rainy || windy,
+      bottoms: ['pantalon', 'short', 'jupe'], tops: ['tshirt', 'chemise'],
+      needSweater: false, needJacket: rainy || windy, jacketTypes: ['veste_legere', 'veste', 'veste_epaisse'],
+      needScarf: false, needHat: false, needUmbrella: rainy,
     };
   }
   if (t >= 10) {
     return {
-      bottoms: ['pantalon'], tops: ['tshirt', 'chemise'],
-      needSweater: true, needJacket: rainy || windy,
+      bottoms: ['pantalon', 'jupe'], tops: ['tshirt', 'chemise'],
+      needSweater: true, needJacket: rainy || windy, jacketTypes: ['veste_legere', 'veste', 'veste_epaisse'],
+      needScarf: false, needHat: false, needUmbrella: rainy,
     };
   }
   // Froid : base + pull + veste
-  return { bottoms: ['pantalon'], tops: ['tshirt', 'chemise'], needSweater: true, needJacket: true };
+  return {
+    bottoms: ['pantalon', 'jupe'], tops: ['tshirt', 'chemise'], needSweater: true,
+    needJacket: true, jacketTypes: ['veste_epaisse', 'veste'],
+    needScarf: t < 10, needHat: t < 5, needUmbrella: rainy,
+  };
 }
 
 // ---------- Génération ----------
@@ -125,6 +144,7 @@ export function generateOutfit(
   occasion: Style,
   exclude: Set<string> = new Set(),
   history: WornOutfit[] = [],
+  preferences?: OutfitPreferences,
 ): Outfit | null {
   const notes: string[] = [];
   const plan = planFromWeather(weather);
@@ -132,26 +152,35 @@ export function generateOutfit(
   // Seuls les vêtements propres sont proposés ; on filtre par occasion,
   // avec repli sur tout le dressing propre si rien ne correspond.
   const clean = wardrobe.filter((i) => i.clean);
-  const candidates = (types: ClothingType[], label: string): ClothingItem[] => {
+  const candidates = (types: ClothingType[], label: string, required = true): ClothingItem[] => {
     const ofType = clean.filter((i) => types.includes(i.type));
     const matching = ofType.filter((i) => i.styles.includes(occasion));
     if (matching.length > 0) return matching;
     if (ofType.length > 0) {
-      notes.push(`${label} : aucun vêtement « ${occasion} » propre, choix hors style.`);
+      if (required) notes.push(`${label} : aucun vêtement « ${occasion} » propre, choix hors style.`);
       return ofType;
     }
-    notes.push(`${label} : aucun vêtement propre disponible.`);
+    if (required) notes.push(`${label} : aucun vêtement propre disponible.`);
     return [];
   };
 
-  const tops = candidates(plan.tops, 'Haut');
-  const bottoms = candidates(plan.bottoms, 'Bas');
+  const tops = candidates(plan.tops, 'Haut', false);
+  const bottoms = candidates(plan.bottoms, 'Bas', false);
+  const dresses = candidates(['robe'], 'Robe', false);
   const shoes = candidates(['chaussures'], 'Chaussures');
-  const sweaters = plan.needSweater ? candidates(['pull'], 'Pull') : [];
-  const jackets = plan.needJacket ? candidates(['veste'], 'Veste') : [];
+  const sweaters = plan.needSweater ? candidates(['pull'], 'Pull', false) : [];
+  const jackets = plan.needJacket ? candidates(plan.jacketTypes, 'Veste', false) : [];
+  const scarves = plan.needScarf ? candidates(['echarpe'], 'Écharpe', false) : [];
+  const hats = plan.needHat ? candidates(['bonnet'], 'Bonnet', false) : [];
+  const umbrellas = plan.needUmbrella ? candidates(['parapluie'], 'Parapluie', false) : [];
 
-  // Sans haut ni bas, impossible de composer une tenue
-  if (tops.length === 0 || bottoms.length === 0) return null;
+  // Une robe compose une tenue complète ; sinon il faut un haut et un bas.
+  if ((tops.length === 0 || bottoms.length === 0) && dresses.length === 0) {
+    notes.push('Ajoute une robe complète ou au moins un haut et un bas propres.');
+    return null;
+  }
+  if (plan.needJacket && jackets.length === 0) notes.push('Aucune veste propre disponible pour la météo.');
+  if (plan.needUmbrella && umbrellas.length === 0) notes.push('Aucun parapluie propre disponible pour la pluie.');
 
   // Historique : dernier jour de port de chaque vêtement + tenues exactes déjà portées récemment
   const lastWorn = new Map<string, number>(); // id -> nombre de jours depuis le dernier port
@@ -171,15 +200,22 @@ export function generateOutfit(
     const seen = new Set<string>();
 
     for (let n = 0; n < 80; n++) {
-      const items = [pick(tops), pick(bottoms)];
+      const useDress = dresses.length > 0 && (tops.length === 0 || bottoms.length === 0 || Math.random() < 0.35);
+      const items = useDress ? [pick(dresses)] : [pick(tops), pick(bottoms)];
       if (shoes.length) items.push(pick(shoes));
       if (sweaters.length) items.push(pick(sweaters));
       if (jackets.length) items.push(pick(jackets));
+      if (scarves.length) items.push(pick(scarves));
+      if (hats.length) items.push(pick(hats));
+      if (umbrellas.length) items.push(pick(umbrellas));
 
       const sig = signature(items);
       if (seen.has(sig) || blocked.has(sig)) continue;
       seen.add(sig);
-      tries.push({ items, score: scoreOutfit(items) - repeatPenalty(items, lastWorn) });
+      const preference = preferences
+        ? (preferences.liked[sig] ?? 0) * 2 - (preferences.rejected[sig] ?? 0) * 3
+        : 0;
+      tries.push({ items, score: scoreOutfit(items) - repeatPenalty(items, lastWorn) + preference });
     }
 
     if (tries.length === 0) return null;

@@ -131,7 +131,7 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
       </View>
 
       <Text style={styles.hint}>
-        Les articles qui ne sont pas des vêtements sont masqués. Touche le type ou la couleur d'un article pour les corriger.
+        Les articles qui ne sont pas des vêtements sont masqués. Touche le type ou la couleur d’un article pour les corriger.
       </Text>
 
       {analysing && (
@@ -144,7 +144,7 @@ export default function ImportResults({ items, onBack, onConfirm }: Props) {
         <Text style={styles.note}>Vérification par IA indisponible : reconnaissance par nom uniquement.</Text>
       )}
       {notice === 'limit' && (
-        <Text style={styles.note}>Limite gratuite de l'IA atteinte : les articles restants gardent la reconnaissance par nom, vérifie-les.</Text>
+        <Text style={styles.note}>Limite gratuite de l’IA atteinte : les articles restants gardent la reconnaissance par nom, vérifie-les.</Text>
       )}
 
       <View style={styles.search}>

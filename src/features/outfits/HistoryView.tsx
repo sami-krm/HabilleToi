@@ -85,14 +85,14 @@ export default function HistoryView() {
         }
         ListEmptyComponent={
           <Text style={styles.empty}>
-            Aucune tenue enregistrée. Dans l'onglet Tenue, touche « Portée » après avoir choisi ta tenue : l'app évitera
+            Aucune tenue enregistrée. Dans l’onglet Tenue, touche « Portée » après avoir choisi ta tenue : l’app évitera
             ensuite de te reproposer les mêmes vêtements plusieurs jours de suite.
           </Text>
         }
         ListFooterComponent={
           entries.length > 0 ? (
             <Pressable style={styles.clearBtn} onPress={confirmClear}>
-              <Text style={styles.clearText}>Effacer l'historique</Text>
+              <Text style={styles.clearText}>Effacer l’historique</Text>
             </Pressable>
           ) : null
         }

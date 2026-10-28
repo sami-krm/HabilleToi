@@ -21,7 +21,7 @@ export function useWardrobe() {
 
   /** Marque des vêtements comme sales (false) ou lavés (true). */
   const setClean = (ids: string[], clean: boolean) =>
-    persist(items.map((i) => (ids.includes(i.id) ? { ...i, clean } : i)));
+    persist(items.map((i) => (ids.includes(i.id) ? { ...i, clean, ...(clean ? { lastWashedAt: Date.now() } : {}) } : i)));
 
   return { items, reload, addItem, removeItem, updateItem, setClean };
 }

@@ -109,7 +109,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
         <ActivityIndicator size="large" color={Palette.accent} />
         <Text style={styles.title}>Import en cours…</Text>
         <Text style={styles.sub}>{progress.done} / {progress.total}</Text>
-        <Text style={styles.sub}>Garde l'app ouverte : une notification t'avertira à la fin.</Text>
+        <Text style={styles.sub}>Garde l’app ouverte : une notification t’avertira à la fin.</Text>
       </SafeAreaView>
     );
   }
@@ -123,7 +123,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
           {importedCount} vêtement{importedCount > 1 ? 's' : ''} ajouté{importedCount > 1 ? 's' : ''}
         </Text>
         <Text style={styles.sub}>
-          Le type et la couleur viennent du nom des articles : vérifie-les dans l'onglet Dressing.
+          Le type et la couleur viennent du nom des articles : vérifie-les dans l’onglet Dressing.
         </Text>
         <Pressable style={[styles.primary, { alignSelf: 'stretch' }]} onPress={onDone}>
           <Text style={styles.primaryText}>Terminer</Text>
@@ -153,8 +153,8 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
         <Text style={styles.bigTitle}>{standalone ? 'Importer depuis une boutique' : 'Importe tes achats'}</Text>
         <Text style={styles.sub}>
           Retrouve tes vêtements déjà commandés pour remplir ton dressing plus vite. Tu te connectes toi-même
-          sur le site de la boutique : l'app ne voit ni ton mot de passe, ni tes identifiants. Elle lit seulement
-          les images et les noms d'articles de la page affichée, quand tu le demandes.
+          sur le site de la boutique : l’app ne voit ni ton mot de passe, ni tes identifiants. Elle lit seulement
+          les images et les noms d’articles de la page affichée, quand tu le demandes.
         </Text>
 
         {favorites.length > 0 && (
@@ -172,7 +172,7 @@ export default function ShopImport({ shopIds, onBack, onDone, standalone = false
         )}
 
         {!standalone && favorites.length === 0 && (
-          <Text style={styles.sub}>Tu n'as choisi aucune boutique. Tu pourras en importer plus tard depuis l'onglet Dressing.</Text>
+          <Text style={styles.sub}>Tu n’as choisi aucune boutique. Tu pourras en importer plus tard depuis l’onglet Dressing.</Text>
         )}
       </ScrollView>
 

@@ -1,7 +1,7 @@
 import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useMemo, type ComponentProps } from 'react';
-import { Alert, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import { PACK_ORDER, typePlural, typeSingular } from '@/services/packingGenerator';
@@ -87,7 +87,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
           <View style={styles.banner}>
             <MaterialCommunityIcons name="information-outline" size={18} color={Palette.warning} />
             <Text style={styles.bannerText}>
-              Ces dates sont trop lointaines pour une prévision : la météo est estimée d'après les mêmes jours l'an dernier.
+              Ces dates sont trop lointaines pour une prévision : la météo est estimée d’après les mêmes jours l’an dernier.
             </Text>
           </View>
         )}
@@ -109,7 +109,7 @@ export default function TripResult({ trip, wardrobe, onBack, onTogglePacked, onR
         </View>
 
         {items.length === 0 && (
-          <Text style={styles.sub}>Aucun vêtement n'a pu être sélectionné. Ajoute des pièces dans ton dressing.</Text>
+          <Text style={styles.sub}>Aucun vêtement n’a pu être sélectionné. Ajoute des pièces dans ton dressing.</Text>
         )}
 
         {PACK_ORDER.map((type) => {

@@ -7,7 +7,10 @@ export interface Suggestion {
   styles?: Style[];
 }
 
-const TYPES: ClothingType[] = ['tshirt', 'chemise', 'pull', 'veste', 'pantalon', 'short', 'chaussures'];
+const TYPES: ClothingType[] = [
+  'tshirt', 'chemise', 'pull', 'veste', 'veste_legere', 'veste_epaisse',
+  'pantalon', 'short', 'jupe', 'robe', 'chaussures', 'echarpe', 'bonnet', 'parapluie',
+];
 const COLORS: ColorName[] = [
   'noir', 'blanc', 'gris', 'beige', 'marine', 'marron',
   'bleu', 'rouge', 'vert', 'jaune', 'orange', 'rose', 'violet',

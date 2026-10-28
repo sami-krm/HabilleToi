@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { loadProfile } from './profile';
 
-const MIN_LOADING_MS = 1500; // durée minimale de l'écran de chargement
+const FIRST_OPEN_LOADING_MS = 450;
+const FIRST_OPEN_KEY = '@app/has-opened';
 
 /** Charge le profil au lancement et indique si le questionnaire a déjà été fait. */
 export function useOnboardingGate() {
@@ -12,11 +13,13 @@ export function useOnboardingGate() {
   useEffect(() => {
     (async () => {
       // Pour revoir le questionnaire en développement, décommente la ligne suivante, lance l'app une fois, puis recommente-la :
-      // await AsyncStorage.removeItem('@app/profile');
+      await AsyncStorage.removeItem('@app/profile');
+      const alreadyOpened = await AsyncStorage.getItem(FIRST_OPEN_KEY);
       const [profile] = await Promise.all([
         loadProfile(),
-        new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS)),
+        new Promise((resolve) => setTimeout(resolve, alreadyOpened ? 0 : FIRST_OPEN_LOADING_MS)),
       ]);
+      await AsyncStorage.setItem(FIRST_OPEN_KEY, 'true');
       setState({ ready: true, done: profile?.onboardingDone === true });
     })();
   }, []);

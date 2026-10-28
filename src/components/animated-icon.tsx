@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import { useState } from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
@@ -56,7 +57,10 @@ export function AnimatedSplashOverlay() {
     <View
       onLayout={() => {
         SplashScreen.hideAsync().finally(() => {
-          setAnimate(true);
+          AsyncStorage.getItem('@app/has-opened').then((alreadyOpened) => {
+            if (alreadyOpened) setVisible(false);
+            else setAnimate(true);
+          }).catch(() => setAnimate(true));
         });
       }}
       style={styles.splashOverlay}>

@@ -42,7 +42,7 @@ export default function FavoritesView() {
         ListHeaderComponent={<Text style={styles.title}>Mes tenues favorites ({favorites.length})</Text>}
         ListEmptyComponent={
           <Text style={styles.empty}>
-            Aucun favori pour l'instant. Appuie sur « Favori » dans l'onglet Tenue pour en enregistrer un.
+            Aucun favori pour l’instant. Appuie sur « Favori » dans l’onglet Tenue pour en enregistrer un.
           </Text>
         }
         renderItem={({ item: fav }) => {

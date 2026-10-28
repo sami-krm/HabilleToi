@@ -1,7 +1,7 @@
 import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { type ComponentProps, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { type ComponentProps, useEffect, useState } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import ShopImport from '@/features/import/ShopImport';
@@ -53,7 +53,7 @@ export default function OnboardingFlow({ onFinish }: { onFinish: () => void }) {
   const step = STEPS[stepIndex];
 
   // Barre de progression animée
-  const progress = useRef(new Animated.Value(0)).current;
+  const [progress] = useState(() => new Animated.Value(0));
   useEffect(() => {
     Animated.timing(progress, {
       toValue: (stepIndex + 1) / STEPS.length,

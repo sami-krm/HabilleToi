@@ -2,7 +2,7 @@ import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import type { TripFormValues } from '@/features/trip/TripForm';
@@ -139,7 +139,7 @@ export default function TripScreen() {
           <View style={styles.empty}>
             <MaterialCommunityIcons name="bag-suitcase-outline" size={48} color={Palette.accent} />
             <Text style={styles.emptyText}>
-              Choisis une destination et des dates : l'app compose une valise de vêtements qui vont bien ensemble,
+              Choisis une destination et des dates : l’app compose une valise de vêtements qui vont bien ensemble,
               adaptés à la météo du séjour.
             </Text>
           </View>

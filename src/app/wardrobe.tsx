@@ -1,4 +1,3 @@
-{/* import DemoDataButton from '@/features/dev/DemoDataButton'; */}
 import AuroraScreen from '@/components/AuroraScreen';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLifecycleLog } from '@/utils/lifecycleLog';
@@ -7,15 +6,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
-    ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View,
+    ActivityIndicator, Alert, FlatList, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
 import { Palette } from '@/constants/theme';
 import ImportFromShopButton from '@/features/import/ImportFromShopButton';
 import { useWardrobe } from '@/hooks/useWardrobe';
+import { loadHistory } from '@/storage/wardrobeStorage';
 import { recognizeClothing } from '@/services/clothingRecognition';
+import { removeClothingBackground } from '@/services/backgroundRemoval';
 import type { ClothingItem, ClothingType, ColorName, Style } from '@/types';
 import { allColors } from '@/types';
+
+// import DemoDataButton from '@/features/dev/DemoDataButton';
 
 // ---------- Données d'affichage ----------
 const TYPES: { key: ClothingType; label: string }[] = [
@@ -23,9 +26,16 @@ const TYPES: { key: ClothingType; label: string }[] = [
   { key: 'chemise', label: 'Chemise' },
   { key: 'pull', label: 'Pull' },
   { key: 'veste', label: 'Veste' },
+  { key: 'veste_legere', label: 'Veste légère' },
+  { key: 'veste_epaisse', label: 'Veste chaude' },
   { key: 'pantalon', label: 'Pantalon' },
   { key: 'short', label: 'Short' },
+  { key: 'jupe', label: 'Jupe' },
+  { key: 'robe', label: 'Robe' },
   { key: 'chaussures', label: 'Chaussures' },
+  { key: 'echarpe', label: 'Écharpe' },
+  { key: 'bonnet', label: 'Bonnet' },
+  { key: 'parapluie', label: 'Parapluie' },
 ];
 
 const STYLES: { key: Style; label: string }[] = [
@@ -49,9 +59,16 @@ const CATEGORY_TABS: { key: Category; label: string }[] = [
   { key: 'chemise', label: 'Chemises' },
   { key: 'pull', label: 'Pulls' },
   { key: 'veste', label: 'Vestes' },
+  { key: 'veste_legere', label: 'Vestes légères' },
+  { key: 'veste_epaisse', label: 'Vestes chaudes' },
   { key: 'pantalon', label: 'Pantalons' },
   { key: 'short', label: 'Shorts' },
+  { key: 'jupe', label: 'Jupes' },
+  { key: 'robe', label: 'Robes' },
   { key: 'chaussures', label: 'Chaussures' },
+  { key: 'echarpe', label: 'Écharpes' },
+  { key: 'bonnet', label: 'Bonnets' },
+  { key: 'parapluie', label: 'Parapluies' },
 ];
 
 type StateFilter = 'all' | 'clean' | 'dirty';
@@ -117,6 +134,10 @@ export default function WardrobeScreen() {
   const [selColors, setSelColors] = useState<ColorName[]>(['noir']); // la 1re = couleur principale
   const [selStyles, setSelStyles] = useState<Style[]>(['casual']);
   const [pattern, setPattern] = useState<'uni' | 'motif'>('uni');
+  const [priceText, setPriceText] = useState('');
+  const [waterproof, setWaterproof] = useState(false);
+  const [batchQueue, setBatchQueue] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [removingBackground, setRemovingBackground] = useState(false);
 
   // Reconnaissance automatique (uniquement à l'ajout)
   const [analyzing, setAnalyzing] = useState(false);
@@ -155,6 +176,21 @@ export default function WardrobeScreen() {
     setAnalyzing(false);
     setEditingId(null);
     setDraftUri(null);
+    setBatchQueue([]);
+  };
+
+  const showStats = async () => {
+    const history = await loadHistory();
+    const worn = new Map<string, number>();
+    for (const entry of history) for (const id of entry.itemIds) worn.set(id, (worn.get(id) ?? 0) + 1);
+    const never = items.filter((item) => !worn.has(item.id)).length;
+    const colors = new Map<string, number>();
+    for (const item of items) for (const color of allColors(item)) colors.set(color, (colors.get(color) ?? 0) + 1);
+    const dominant = [...colors.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([color]) => color).join(', ') || '—';
+    const purchases = items.filter((item) => typeof item.price === 'number');
+    const averageCost = purchases.length ? (purchases.reduce((sum, item) => sum + (item.price ?? 0) / Math.max(1, worn.get(item.id) ?? 0), 0) / purchases.length).toFixed(2) : null;
+    const missingRainwear = !items.some((item) => ['veste', 'veste_legere', 'veste_epaisse'].includes(item.type) && item.waterproof);
+    Alert.alert('Statistiques du dressing', `${never} pièce${never !== 1 ? 's' : ''} jamais portée${never !== 1 ? 's' : ''}\nCouleurs dominantes : ${dominant}\n${averageCost ? `Coût moyen par port : ${averageCost} €\n` : ''}${missingRainwear ? 'Il te manque une veste imperméable.' : 'Tu as une veste imperméable.'}`);
   };
 
   // Ouvre le formulaire pré-rempli avec un vêtement existant
@@ -168,6 +204,8 @@ export default function WardrobeScreen() {
     setSelColors(allColors(item));
     setSelStyles(item.styles);
     setPattern(item.pattern);
+    setPriceText(item.price === undefined ? '' : String(item.price));
+    setWaterproof(item.waterproof ?? false);
     setDraftUri(item.uri); // ouvre la fenêtre
   };
 
@@ -176,7 +214,7 @@ export default function WardrobeScreen() {
     try {
       // base64: true : nécessaire pour envoyer l'image à la reconnaissance
       const options: ImagePicker.ImagePickerOptions = {
-        quality: 0.4, allowsEditing: true, aspect: [1, 1], base64: true,
+        quality: 0.4, allowsEditing: source === 'camera', aspect: [1, 1], base64: true,
       };
       let result: ImagePicker.ImagePickerResult;
       if (source === 'camera') {
@@ -188,15 +226,17 @@ export default function WardrobeScreen() {
         result = await ImagePicker.launchCameraAsync(options);
       } else {
         // Le sélecteur de photos système ne demande pas de permission
-        result = await ImagePicker.launchImageLibraryAsync({ ...options, mediaTypes: ['images'] });
+        result = await ImagePicker.launchImageLibraryAsync({ ...options, mediaTypes: ['images'], allowsMultipleSelection: true, selectionLimit: 10 });
       }
       if (result.canceled) return;
 
-      const asset = result.assets[0];
+      const [asset, ...rest] = result.assets;
+      setBatchQueue(rest);
 
       // Réinitialise le formulaire avant d'ouvrir la fenêtre
       setEditingId(null);
       setType('tshirt'); setSelColors(['noir']); setSelStyles(['casual']); setPattern('uni');
+      setPriceText(''); setWaterproof(false);
       setAiApplied(false); setAiFailed(false);
       setDraftUri(asset.uri);
 
@@ -220,6 +260,8 @@ export default function WardrobeScreen() {
     if (!draftUri) return;
     const fields = {
       type, pattern,
+      price: priceText.trim() ? Number(priceText.replace(',', '.')) : undefined,
+      waterproof: ['veste', 'veste_legere', 'veste_epaisse'].includes(type) ? waterproof : false,
       color: selColors[0],
       extraColors: selColors.slice(1),
       styles: selStyles.length > 0 ? selStyles : (['casual'] as Style[]),
@@ -227,7 +269,17 @@ export default function WardrobeScreen() {
 
     // Modification d'un vêtement existant : la photo et l'état propre/sale ne changent pas
     if (editingId) {
-      await updateItem(editingId, fields);
+      const current = items.find((item) => item.id === editingId);
+      const patch: Partial<Omit<ClothingItem, 'id'>> = { ...fields };
+      if (current && current.uri !== draftUri) {
+        const dest = new File(Paths.document, `${editingId}-${Date.now()}.png`);
+        new File(draftUri).copy(dest);
+        patch.uri = dest.uri;
+      }
+      await updateItem(editingId, patch);
+      if (current && patch.uri && current.uri.startsWith(Paths.document.uri)) {
+        try { const previous = new File(current.uri); if (previous.exists) previous.delete(); } catch {}
+      }
       closeForm();
       return;
     }
@@ -238,7 +290,8 @@ export default function WardrobeScreen() {
     // Copie la photo dans le stockage permanent de l'app (sinon le fichier temporaire peut disparaître)
     let uri = draftUri;
     try {
-      const dest = new File(Paths.document, `${id}.jpg`);
+      const extension = draftUri.toLowerCase().split('?')[0].endsWith('.png') ? 'png' : 'jpg';
+      const dest = new File(Paths.document, `${id}.${extension}`);
       new File(draftUri).copy(dest);
       uri = dest.uri;
     } catch {
@@ -249,7 +302,30 @@ export default function WardrobeScreen() {
     await addItem(newItem);
     // Si les filtres cachaient le vêtement qu'on vient d'ajouter, on les efface pour qu'il soit visible
     if (!matchesFilters(newItem)) resetFilters();
-    closeForm();
+    if (batchQueue.length > 0) {
+      const [next, ...remaining] = batchQueue;
+      setBatchQueue(remaining);
+      setType('tshirt'); setSelColors(['noir']); setSelStyles(['casual']); setPattern('uni'); setPriceText(''); setWaterproof(false);
+      setAiApplied(false); setAiFailed(false); setDraftUri(next.uri);
+      if (next.base64) runRecognition(next.base64, next.mimeType ?? 'image/jpeg');
+    } else closeForm();
+  };
+
+  const applyBackgroundRemoval = async () => {
+    if (!draftUri) return;
+    setRemovingBackground(true);
+    try {
+      const imageBase64 = await removeClothingBackground(draftUri);
+      const result = new File(Paths.cache, `detoure-${Date.now()}.png`);
+      result.create({ intermediates: true, overwrite: true });
+      result.write(imageBase64, { encoding: 'base64' });
+      setDraftUri(result.uri);
+      if (!editingId && !aiApplied) runRecognition(imageBase64, 'image/png');
+    } catch (error) {
+      Alert.alert('Détourage impossible', error instanceof Error ? error.message : 'Réessaie dans un instant.');
+    } finally {
+      setRemovingBackground(false);
+    }
   };
 
   // Suppression (avec confirmation) + effacement de la photo stockée par l'app
@@ -291,13 +367,17 @@ export default function WardrobeScreen() {
           {visible.length !== items.length ? ` sur ${items.length}` : ''})
         </Text>
         <View style={styles.actions}>
+          <Pressable style={[styles.btn, styles.btnGhost]} onPress={showStats}>
+            <MaterialCommunityIcons name="chart-donut" size={18} color={Palette.accent} />
+            <Text style={styles.btnGhostText}>Stats</Text>
+          </Pressable>
           <Pressable style={styles.btn} onPress={() => pickImage('camera')}>
             <MaterialCommunityIcons name="camera-outline" size={18} color={Palette.onAccent} />
             <Text style={styles.btnText}>Photo</Text>
           </Pressable>
           <Pressable style={styles.btn} onPress={() => pickImage('library')}>
             <MaterialCommunityIcons name="image-outline" size={18} color={Palette.onAccent} />
-            <Text style={styles.btnText}>Galerie</Text>
+            <Text style={styles.btnText}>Galerie · 10 photos</Text>
           </Pressable>
           <ImportFromShopButton onImported={reload} />
           {/* <DemoDataButton onChanged={reload} /> */}
@@ -421,9 +501,21 @@ export default function WardrobeScreen() {
       <Modal visible={draftUri !== null} animationType="slide" onRequestClose={closeForm}>
         <SafeAreaView style={styles.safe}>
           <ScrollView contentContainerStyle={styles.form}>
-            <Text style={styles.formTitle}>{editingId ? 'Modifier le vêtement' : 'Nouveau vêtement'}</Text>
+            <Text style={styles.formTitle}>{editingId ? 'Modifier le vêtement' : batchQueue.length ? `Vêtement · ${batchQueue.length + 1} photos restantes` : 'Nouveau vêtement'}</Text>
 
             {draftUri && <Image source={{ uri: draftUri }} style={styles.preview} />}
+            <Pressable
+              style={[styles.btn, styles.btnGhost, styles.cutoutButton]}
+              onPress={applyBackgroundRemoval}
+              disabled={removingBackground || !draftUri}
+              accessibilityRole="button"
+            >
+              {removingBackground
+                ? <ActivityIndicator size="small" />
+                : <MaterialCommunityIcons name="image-filter-center-focus-strong-outline" size={18} color={Palette.accent} />}
+              <Text style={styles.btnGhostText}>{removingBackground ? 'Détourage en cours…' : 'Retirer le fond'}</Text>
+            </Pressable>
+            <Text style={styles.cutoutHint}>La photo est envoyée au service de détourage après ton appui. Connecte-toi dans Profil &gt; Synchronisation en ligne.</Text>
 
             {/* Bandeau de reconnaissance automatique (ajout uniquement) */}
             {analyzing && (
@@ -449,7 +541,7 @@ export default function WardrobeScreen() {
 
             <Text style={styles.label}>Couleurs</Text>
             <Text style={styles.hintInline}>
-              Touche jusqu'à {MAX_COLORS} couleurs. Le numéro 1 est la couleur principale.
+              Touche jusqu&apos;à {MAX_COLORS} couleurs. Le numéro 1 est la couleur principale.
             </Text>
             <View style={styles.swatches}>
               {(Object.keys(COLORS) as ColorName[]).map((c) => {
@@ -482,6 +574,10 @@ export default function WardrobeScreen() {
               <Chip label="Uni" active={pattern === 'uni'} onPress={() => setPattern('uni')} />
               <Chip label="À motifs" active={pattern === 'motif'} onPress={() => setPattern('motif')} />
             </View>
+
+            <Text style={styles.label}>Prix payé (facultatif, en €)</Text>
+            <TextInput style={styles.formInput} keyboardType="decimal-pad" value={priceText} onChangeText={setPriceText} placeholder="0,00" placeholderTextColor={Palette.textSecondary} />
+            {['veste', 'veste_legere', 'veste_epaisse'].includes(type) && <Chip label={waterproof ? 'Veste imperméable ✓' : 'Veste imperméable ?'} active={waterproof} onPress={() => setWaterproof((value) => !value)} />}
 
             <View style={styles.actions}>
               <Pressable style={[styles.btn, styles.btnGhost]} onPress={closeForm}>
@@ -571,7 +667,10 @@ const styles = StyleSheet.create({
   // Formulaire
   form: { padding: 20, gap: 12, paddingBottom: 40 },
   formTitle: { fontSize: 22, fontWeight: '700', color: Palette.text },
+  formInput: { borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: Palette.surfaceRaised, color: Palette.text },
   preview: { width: '100%', aspectRatio: 1, borderRadius: 18, backgroundColor: Palette.surfaceRaised },
+  cutoutButton: { alignSelf: 'center' },
+  cutoutHint: { color: Palette.textSecondary, textAlign: 'center', fontSize: 12, marginTop: -4 },
   banner: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: Palette.accentSoft, borderRadius: 14, padding: 12,

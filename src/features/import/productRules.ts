@@ -39,17 +39,17 @@ const hasAny = (text: string, words: string[]) => words.some((w) => findWord(tex
 const OTHER_WORDS = [
   // sacs et accessoires
   'sac$', 'sac a dos', 'sacoche', 'backpack', 'bag$', 'cartable', 'banane$', 'pochette', 'portefeuille', 'wallet', 'valise',
-  'ceinture', 'belt$', 'casquette', 'cap$', 'bonnet', 'beanie', 'bob$', 'chapeau', 'echarpe', 'scarf', 'foulard', 'gant$',
+  'ceinture', 'belt$', 'casquette', 'cap$', 'bob$', 'chapeau', 'gant$',
   'lunettes', 'sunglasses', 'montre', 'watch$', 'bijou', 'collier', 'bracelet', 'bague', 'boucles d oreilles', 'cravate', 'noeud papillon',
-  'parapluie', 'porte cle',
+  'porte cle',
   // beauté, entretien, maison
   'parfum', 'eau de toilette', 'deodorant', 'deo$', 'gel douche', 'shampoing', 'shampoo', 'creme hydratante', 'creme solaire', 'creme visage', 'face cream', 'hand cream', 'lotion', 'savon',
   'soin', 'maquillage', 'rasoir', 'brosse', 'serviette', 'bougie', 'coque', 'cable usb', 'cable de charge', 'chargeur', 'carte cadeau', 'gift card',
   // sous-vêtements, chaussettes, nuit
   'chaussette', 'sock$', 'socks', 'sous vetement', 'underwear', 'boxer', 'shorty', 'calecon', 'culotte', 'string$', 'slip homme', 'slip femme', 'slip coton',
   'soutien gorge', 'lingerie', 'brassiere', 'collant', 'pyjama', 'nuisette', 'peignoir', 'robe de chambre',
-  // vêtements non gérés (pas dans les 7 catégories)
-  'robe$', 'jupe', 'skirt', 'combinaison', 'jumpsuit', 'maillot de bain', 'bikini', 'swimsuit', 'caftan',
+  // vêtements non gérés
+  'combinaison', 'jumpsuit', 'maillot de bain', 'bikini', 'swimsuit', 'caftan',
   // éléments de page qui ne sont pas des produits
   'qr code', 'qrcode', 'download', 'telecharger', 'app store', 'google play', 'newsletter', 'livraison', 'retour gratuit',
   'paiement', 'trustpilot',
@@ -58,14 +58,20 @@ const OTHER_WORDS = [
 // ---------- Types de vêtements (l'ordre compte : le plus précis d'abord) ----------
 const TYPE_WORDS: [ClothingType, string[]][] = [
   ['short', ['short', 'bermuda']],
+  ['parapluie', ['parapluie', 'umbrella', 'paraguas']],
+  ['bonnet', ['bonnet', 'beanie', 'chapeau en maille']],
+  ['echarpe', ['echarpe', 'scarf', 'foulard']],
+  ['robe', ['robe$', 'dress$', 'vestido', 'abito']],
+  ['jupe', ['jupe', 'skirt$', 'falda', 'gonna']],
   ['chaussures', [
     'chaussure', 'basket', 'sneaker', 'trainer$', 'shoe$', 'sandale', 'sandal', 'chausson', 'mule$', 'claquette',
     'tong$', 'botte', 'boot$', 'bottine', 'mocassin', 'loafer', 'derby$', 'richelieu', 'escarpin', 'ballerine', 'espadrille',
     'slipper', 'schuh', 'zapatilla', 'scarpa',
   ]],
+  ['veste_epaisse', ['veste chaude', 'manteau', 'parka', 'doudoune', 'anorak', 'polaire', 'puffer', 'heavy jacket', 'winter coat']],
+  ['veste_legere', ['veste legere', 'coupe vent', 'windbreaker', 'light jacket', 'bomber', 'perfecto']],
   ['veste', [
-    'veste', 'manteau', 'blouson', 'parka', 'doudoune', 'trench', 'imper$', 'impermeable', 'coupe vent', 'jacket', 'coat$',
-    'anorak', 'bomber', 'perfecto', 'blazer', 'polaire', 'windbreaker', 'puffer', 'jakke', 'jacke',
+    'veste', 'blouson', 'trench', 'imper$', 'impermeable', 'jacket', 'coat$', 'blazer', 'jakke', 'jacke',
   ]],
   ['pantalon', [
     'pantalon', 'sweatpant', 'jean$', 'jeans', 'chino', 'jogging', 'jogger', 'legging', 'cargo$', 'trouser', 'pant$', 'pants', 'sarouel',

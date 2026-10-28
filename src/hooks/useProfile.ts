@@ -10,6 +10,7 @@ export interface Profile {
   cold: ColdLevel;
   unit: 'C' | 'F';
   notifications: boolean;
+  calendarEnabled: boolean;
 }
 
 const KEY = 'profile';
@@ -20,6 +21,7 @@ export const DEFAULT_PROFILE: Profile = {
   cold: 'normal',
   unit: 'C',
   notifications: true,
+  calendarEnabled: false,
 };
 
 export function useProfile() {

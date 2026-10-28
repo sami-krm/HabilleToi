@@ -10,9 +10,12 @@
     "backgroundColor": "#F4F1FF",
     "primaryColor": "#9B7BFF",
     "ios": {
+      "bundleIdentifier": "com.meteovetements.app",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.meteovetements.app",
+      "blockedPermissions": ["android.permission.WRITE_CALENDAR"],
       "adaptiveIcon": {
         "backgroundColor": "#F4F1FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -48,7 +51,41 @@
           "cameraPermission": "Pour photographier tes vêtements."
         }
       ],
-      "@react-native-community/datetimepicker"
+      [
+        "expo-file-system",
+        {
+          "supportsOpeningDocumentsInPlace": true,
+          "enableFileSharing": true
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Pour repérer l’occasion de ta journée et adapter la tenue proposée."
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.meteovetements.app.widgets",
+          "groupIdentifier": "group.com.meteovetements.app",
+          "widgets": [
+            {
+              "name": "DailyOutfitWidget",
+              "displayName": "Tenue du jour",
+              "description": "La tenue conseillée et la météo du jour.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

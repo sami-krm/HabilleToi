@@ -30,8 +30,10 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
   // Recharge les réglages enregistrés à chaque ouverture
   useEffect(() => {
     if (!visible) return;
-    setStatus(null);
-    loadReminderSettings().then(setDraft);
+    loadReminderSettings().then((settings) => {
+      setStatus(null);
+      setDraft(settings);
+    });
   }, [visible]);
 
   // Le sélecteur travaille avec une date : on y place l'heure choisie
@@ -113,7 +115,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
 
           <Text style={styles.sub}>
             Chaque matin, une notification te donne la météo du jour et te dit que ta tenue est prête.
-            Les prévisions sont remises à jour à chaque ouverture de l'app : ouvre-la au moins une fois tous les 14 jours.
+            Les prévisions sont remises à jour à chaque ouverture de l’app : ouvre-la au moins une fois tous les 14 jours.
           </Text>
 
           <View style={styles.row}>
@@ -141,7 +143,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
             ) : (
               <Pressable onPress={openAndroidPicker} style={styles.androidTime}>
                 <Text style={styles.time}>{formatTime(draft.hour, draft.minute)}</Text>
-                <Text style={styles.timeHint}>Touche pour changer l'heure</Text>
+                <Text style={styles.timeHint}>Touche pour changer l’heure</Text>
               </Pressable>
             )}
           </View>
@@ -149,7 +151,7 @@ export default function MorningReminderModal({ visible, onClose }: Props) {
           {draft.enabled && (
             <Pressable style={styles.testBtn} onPress={test} disabled={busy}>
               <MaterialCommunityIcons name="bell-ring-outline" size={18} color={Palette.accent} />
-              <Text style={styles.testText}>Envoyer une notification d'essai</Text>
+              <Text style={styles.testText}>Envoyer une notification d’essai</Text>
             </Pressable>
           )}
 
