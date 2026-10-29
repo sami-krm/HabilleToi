@@ -30,7 +30,7 @@ export async function createBackupString(): Promise<string> {
 
 export async function exportBackup(): Promise<string> {
   const serialized = await createBackupString();
-  const name = `tenue-du-jour-${Date.now()}.json`;
+  const name = `habilletoi-${Date.now()}.json`;
   let file: File;
   if (Platform.OS === 'android') {
     const directory = await Directory.pickDirectoryAsync();
@@ -46,7 +46,7 @@ export async function exportBackup(): Promise<string> {
 export async function restoreBackupString(serialized: string): Promise<number> {
   const backup = JSON.parse(serialized) as Partial<Backup>;
   if (backup.format !== 'tenue-du-jour' || backup.version !== 1 || !Array.isArray(backup.storage)) {
-    throw new Error('Ce fichier ne ressemble pas à une sauvegarde Tenue du jour.');
+    throw new Error('Ce fichier ne ressemble pas à une sauvegarde HabilleToi.');
   }
   const photoUris = new Map<string, string>();
   for (const [id, base64] of Object.entries(backup.photos ?? {})) {

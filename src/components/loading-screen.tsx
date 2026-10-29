@@ -5,7 +5,7 @@ import { ActivityIndicator, Animated, Easing, StyleSheet, Text, View } from 'rea
 import AuroraBackground from '@/components/AuroraBackground';
 import { Glass, Palette } from '@/constants/theme';
 
-const APP_NAME = 'Tenue du jour'; // à adapter
+const APP_NAME = 'HabilleToi';
 
 export default function LoadingScreen() {
   const [pulse] = useState(() => new Animated.Value(0));

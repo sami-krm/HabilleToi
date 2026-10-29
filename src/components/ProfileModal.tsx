@@ -159,7 +159,7 @@ export default function ProfileModal({ visible, onClose, profile, update, onData
       await exportBackup();
       Alert.alert('Sauvegarde prête', Platform.OS === 'android'
         ? 'Le fichier a été créé dans le dossier que tu as choisi.'
-        : 'Le fichier est dans Fichiers > Sur mon iPhone > Tenue du jour. Tu peux le déplacer vers iCloud Drive.');
+        : 'Le fichier est dans Fichiers > Sur mon iPhone > HabilleToi. Tu peux le déplacer vers iCloud Drive.');
     } catch {
       Alert.alert('Export impossible', 'La sauvegarde n’a pas pu être créée.');
     } finally { setBusy(false); }
@@ -294,7 +294,7 @@ export default function ProfileModal({ visible, onClose, profile, update, onData
         <SettingsRow icon="delete" tint={T.red} title="Supprimer toutes mes données" onPress={doClear} danger last />
       </SettingsGroup>
 
-      <Text style={styles.version}>Tenue du jour{version ? ` · version ${version}` : ''}</Text>
+      <Text style={styles.version}>HabilleToi{version ? ` · version ${version}` : ''}</Text>
     </>
   );
 
