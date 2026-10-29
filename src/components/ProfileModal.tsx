@@ -33,6 +33,7 @@ interface Props {
   profile: Profile;
   update: (patch: Partial<Profile>) => void;
   onDataRestored?: () => void;
+  onShowTutorial?: () => void;
 }
 
 type Page = 'main' | 'name' | 'style' | 'cold' | 'laundry' | 'shops' | 'about';
@@ -97,7 +98,7 @@ function Stat({ value, label }: { value: number; label: string }) {
   );
 }
 
-export default function ProfileModal({ visible, onClose, profile, update, onDataRestored = () => {} }: Props) {
+export default function ProfileModal({ visible, onClose, profile, update, onDataRestored = () => {}, onShowTutorial }: Props) {
   const [page, setPage] = useState<Page>('main');
   const [questionnaire, setQuestionnaire] = useState<UserProfile>({ onboardingDone: false });
   const [thresholds, setThresholds] = useState(DEFAULT_LAUNDRY);
@@ -274,6 +275,12 @@ export default function ProfileModal({ visible, onClose, profile, update, onData
         <SettingsRow icon="storefront" tint={T.orange} title="Boutiques préférées" value={shopsCount ? String(shopsCount) : 'Aucune'} onPress={() => setPage('shops')} />
         <SettingsRow icon="card-account-details" tint={T.purple} title="À propos de moi" subtitle={aboutLabel || 'Genre, âge, situation, pays'} onPress={() => setPage('about')} last />
       </SettingsGroup>
+
+      {onShowTutorial && (
+        <SettingsGroup title="Aide">
+          <SettingsRow icon="school" tint={T.purple} title="Revoir le tuto" subtitle="Les fonctions principales de l’app" onPress={onShowTutorial} last />
+        </SettingsGroup>
+      )}
 
       <SettingsGroup title="Données">
         {!session && <SettingsRow icon="cloud-sync" tint={T.green} title="Synchronisation en ligne" onPress={() => setCloudOpen(true)} />}

@@ -14,6 +14,7 @@ import CityPickerModal from '@/components/CityPickerModal';
 import { RoundAction } from '@/components/RoundAction';
 import StylistModal from '@/components/StylistModal';
 import WeatherDetailsModal from '@/components/WeatherDetailsModal';
+import TutorialModal, { shouldShowTutorial } from '@/features/tutorial/TutorialModal';
 import { STYLE_OPTIONS, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
 import MorningReminderModal from '@/features/notifications/MorningReminderModal';
@@ -52,6 +53,7 @@ export default function HomeScreen() {
   const [cityOpen, setCityOpen] = useState(false);
   const [stylistOpen, setStylistOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
   const [dayOffset, setDayOffset] = useState(0);
   const [calendarHint, setCalendarHint] = useState<Style | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,6 +78,8 @@ export default function HomeScreen() {
     }, [reload, reloadHistory]),
   );
   useEffect(() => { loadOutfitPreferences().then(setPreferences); }, []);
+  // Tuto de présentation : une seule fois, à la première ouverture de l'accueil
+  useEffect(() => { shouldShowTutorial().then((show) => show && setTutorialOpen(true)); }, []);
   useEffect(() => {
     loadComfortFeedback().then((entries) => {
       if (!entries.length) return;
@@ -373,8 +377,10 @@ export default function HomeScreen() {
         profile={profile}
         update={updateProfile}
         onDataRestored={() => { reload(); reloadHistory(); }}
+        onShowTutorial={() => { setProfileOpen(false); setTutorialOpen(true); }}
       />
       <CityPickerModal visible={cityOpen} onClose={() => setCityOpen(false)} onSelect={chooseCity} />
+      <TutorialModal visible={tutorialOpen} onClose={() => setTutorialOpen(false)} />
       <WeatherDetailsModal visible={detailsOpen} onClose={() => setDetailsOpen(false)} weather={weather} unit={profile.unit} advice={advice} />
       <StylistModal visible={stylistOpen} onClose={() => setStylistOpen(false)} items={items} weather={weather} />
     </AuroraScreen>
