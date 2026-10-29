@@ -1,4 +1,6 @@
 import { COLOR_ORDER, STYLE_ORDER, TYPE_ORDER } from '@/constants/clothing';
+import { getCloudSession } from '@/services/cloudSync';
+import { areEdgeFunctionsConfigured, callEdgeFunction } from '@/services/edgeFunctions';
 import type { ClothingType, ColorName, Style } from '@/types';
 
 export interface Suggestion {
@@ -11,6 +13,7 @@ export interface Suggestion {
 const MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_COLORS = 3;
 
+// Ancien service (Worker Cloudflare) : lent, gardé en secours quand on n'est pas connecté
 const ENDPOINT = process.env.EXPO_PUBLIC_RECOGNITION_URL;
 const TOKEN = process.env.EXPO_PUBLIC_APP_TOKEN;
 
@@ -45,14 +48,24 @@ function toSuggestion(raw: any): Suggestion | null {
   return Object.keys(suggestion).length > 0 ? suggestion : null;
 }
 
+interface QuickResult { clothing: boolean; type?: string; colors?: string[]; pattern?: string; styles?: string[] }
+
+/** Reconnaissance rapide par la fonction Supabase (Gemini Flash-Lite) ; undefined si on n'est pas connecté. */
+async function recognizeQuickly(imageBase64: string, mediaType: string, name?: string): Promise<QuickResult | undefined> {
+  if (!areEdgeFunctionsConfigured() || !(await getCloudSession().catch(() => null))) return undefined;
+  return callEdgeFunction<QuickResult>('recognize-clothing', { imageBase64, mediaType: safeMedia(mediaType), name });
+}
+
 /**
- * Envoie la photo d'un vêtement au Worker et renvoie une suggestion validée.
+ * Reconnaît le vêtement de la photo et renvoie une suggestion validée.
  * Renvoie null si la reconnaissance n'est pas configurée ou ne trouve rien.
  */
 export async function recognizeClothing(
   imageBase64: string,
   mediaType = 'image/jpeg',
 ): Promise<Suggestion | null> {
+  const quick = await recognizeQuickly(imageBase64, mediaType);
+  if (quick) return quick.clothing ? toSuggestion(quick) : null;
   if (!ENDPOINT || !TOKEN) return null;
 
   const res = await fetch(ENDPOINT, {
@@ -81,6 +94,16 @@ export async function analyzeProduct(
   mediaType: string,
   name: string,
 ): Promise<ProductVerdict> {
+  try {
+    const quick = await recognizeQuickly(imageBase64, mediaType, name);
+    if (quick) {
+      const suggestion = quick.clothing ? toSuggestion(quick) : null;
+      return suggestion ? { status: 'clothing', suggestion } : { status: 'not-clothing' };
+    }
+  } catch (e) {
+    if (e instanceof Error && /très demandé|offre gratuite/.test(e.message)) return { status: 'rate-limited' };
+    return { status: 'failed' };
+  }
   if (!ENDPOINT || !TOKEN) return { status: 'unavailable' };
 
   let res: Response;

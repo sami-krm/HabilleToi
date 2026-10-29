@@ -6,7 +6,8 @@
 4. Pour Gemini, ajoute la clé côté serveur avec `supabase secrets set GEMINI_API_KEY`, puis déploie `supabase functions deploy stylist` depuis la racine du dépôt. Ne mets jamais cette clé dans `.env` ni dans l’app.
 5. Pour le détourage, ajoute la clé du fournisseur avec `supabase secrets set REMOVE_BG_API_KEY=ta-cle-api`, puis déploie `supabase functions deploy remove-background`. La clé reste côté serveur.
 6. Pour l’import d’une photo de tenue et les photos « boutique », déploie `supabase functions deploy analyze-outfit` et `supabase functions deploy product-shot`. Elles utilisent la même clé `GEMINI_API_KEY`. Les modèles se changent sans redéployer l’app avec `supabase secrets set GEMINI_VISION_MODEL=…` (repérage des pièces, par défaut `gemini-3.5-flash-lite`) et `GEMINI_IMAGE_MODEL=…` (création des photos, par défaut `gemini-3.1-flash-lite-image`).
-7. Redémarre l’app après avoir ajouté les variables d’environnement.
+7. Pour la reconnaissance rapide d’un vêtement (formulaire « Nouveau vêtement » et vérification des articles importés), déploie `supabase functions deploy recognize-clothing`. Elle utilise Gemini Flash-Lite (offre gratuite, environ 1 à 4 s) ; le modèle se change avec le secret `GEMINI_RECOGNITION_MODEL`. Sans compte connecté, l’app se rabat sur l’ancien service `EXPO_PUBLIC_RECOGNITION_URL`.
+8. Redémarre l’app après avoir ajouté les variables d’environnement.
 
 Dans Profil > Synchronisation en ligne, crée un compte puis utilise les boutons de sauvegarde et de restauration sur tes appareils. Chaque sauvegarde remplace la précédente pour ce compte. Elle contient les photos en base64, le dressing, les favoris, l’historique et les préférences.
 

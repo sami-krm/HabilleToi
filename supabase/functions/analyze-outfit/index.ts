@@ -1,36 +1,24 @@
 // @ts-nocheck
 // Repère chaque vêtement et accessoire porté sur une photo de tenue, avec sa position.
+import { cleanColors, cleanStyles, COLORS, parseJsonObject, STYLES, TYPE_HINT, TYPES } from '../_shared/catalog.ts';
 import { callGemini, cors, json, readImage, requireUser, textOf } from '../_shared/gemini.ts';
-
-const TYPES = [
-  'tshirt', 'chemise', 'pull', 'veste', 'veste_legere', 'veste_epaisse', 'pantalon', 'short', 'jupe', 'robe',
-  'chaussures', 'echarpe', 'bonnet', 'parapluie', 'sac', 'ceinture', 'casquette', 'lunettes', 'gants', 'montre', 'bijoux',
-];
-const COLORS = ['noir', 'blanc', 'gris', 'beige', 'marine', 'marron', 'bleu', 'rouge', 'vert', 'jaune', 'orange', 'rose', 'violet'];
-const STYLES = ['casual', 'sport', 'formel', 'soiree'];
 
 const PROMPT = `Tu analyses la photo d'une tenue portée. Repère chaque vêtement et accessoire visible
 (un seul élément par pièce, ignore la peau, les cheveux et le décor).
 Réponds uniquement avec un objet JSON valide, sans texte autour ni balises de code, de la forme :
 {"items":[{"type":"…","label":"…","colors":["…"],"pattern":"uni|motif","styles":["…"],"box_2d":[ymin,xmin,ymax,xmax]}]}
-- type parmi : ${TYPES.join(', ')} (veste_legere = coupe-vent, bomber, perfecto ; veste_epaisse = manteau, doudoune, parka).
+- type parmi : ${TYPES.join(', ')} (${TYPE_HINT}).
 - label : description courte en français (ex. « pull col rond en maille vert kaki »).
 - colors : 1 à 3 couleurs parmi ${COLORS.join(', ')}, la dominante en premier.
 - styles : 1 à 3 occasions parmi ${STYLES.join(', ')}.
 - box_2d : position de la pièce, coordonnées normalisées de 0 à 1000.
 Au plus 8 pièces. Si ce n'est pas une photo de tenue, renvoie {"items":[]}.`;
 
-/** Extrait { items: [...] } du texte, même entouré de ```json ou de phrases. */
+/** Extrait { items: [...] } du texte. */
 function parseItems(text: string) {
-  const cleaned = text.replace(/```(?:json)?/gi, '').trim();
-  const candidates = [cleaned, cleaned.slice(cleaned.indexOf('{'), cleaned.lastIndexOf('}') + 1)];
-  for (const candidate of candidates) {
-    try {
-      const value = JSON.parse(candidate);
-      if (Array.isArray(value?.items)) return value;
-      if (Array.isArray(value)) return { items: value };
-    } catch {}
-  }
+  const value = parseJsonObject(text);
+  if (Array.isArray(value?.items)) return value;
+  if (Array.isArray(value)) return { items: value };
   return null;
 }
 
@@ -65,8 +53,8 @@ Deno.serve(async (request) => {
   // On ne garde que des valeurs connues de l'app
   const items = parsed.items.slice(0, 8).flatMap((raw) => {
     if (!TYPES.includes(raw?.type)) return [];
-    const colors = (Array.isArray(raw.colors) ? raw.colors : []).filter((c) => COLORS.includes(c)).slice(0, 3);
-    const styles = (Array.isArray(raw.styles) ? raw.styles : []).filter((s) => STYLES.includes(s));
+    const colors = cleanColors(raw.colors);
+    const styles = cleanStyles(raw.styles);
     const box = Array.isArray(raw.box_2d) && raw.box_2d.length === 4 && raw.box_2d.every((n) => typeof n === 'number')
       ? raw.box_2d.map((n) => Math.min(1000, Math.max(0, n)))
       : undefined;
