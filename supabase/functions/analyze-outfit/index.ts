@@ -6,12 +6,13 @@ import { callGemini, cors, json, readImage, requireUser, textOf } from '../_shar
 const PROMPT = `Tu analyses la photo d'une tenue portée. Repère chaque vêtement et accessoire visible
 (un seul élément par pièce, ignore la peau, les cheveux et le décor).
 Réponds uniquement avec un objet JSON valide, sans texte autour ni balises de code, de la forme :
-{"items":[{"type":"…","label":"…","colors":["…"],"pattern":"uni|motif","styles":["…"],"box_2d":[ymin,xmin,ymax,xmax]}]}
+{"items":[{"type":"…","label":"…","colors":["…"],"pattern":"uni|motif","styles":["…"],"box_2d":[ymin,xmin,ymax,xmax],"mask":[[x,y],[x,y],…]}]}
 - type parmi : ${TYPES.join(', ')} (${TYPE_HINT}).
 - label : description courte en français (ex. « pull col rond en maille vert kaki »).
 - colors : 1 à 3 couleurs parmi ${COLORS.join(', ')}, la dominante en premier.
 - styles : 1 à 3 occasions parmi ${STYLES.join(', ')}.
 - box_2d : position de la pièce, coordonnées normalisées de 0 à 1000.
+- mask : contour précis de la pièce seule (sans la peau ni les autres vêtements qui la recouvrent), polygone de 12 à 60 points [x, y] dans l'ordre, coordonnées de l'image entière normalisées de 0 à 1000.
 Au plus 8 pièces. Si ce n'est pas une photo de tenue, renvoie {"items":[]}.`;
 
 /** Extrait { items: [...] } du texte. */
@@ -58,6 +59,13 @@ Deno.serve(async (request) => {
     const box = Array.isArray(raw.box_2d) && raw.box_2d.length === 4 && raw.box_2d.every((n) => typeof n === 'number')
       ? raw.box_2d.map((n) => Math.min(1000, Math.max(0, n)))
       : undefined;
+    // Contour : au moins 3 points valides, sinon la pièce sera découpée en rectangle
+    const mask = Array.isArray(raw.mask)
+      ? raw.mask
+        .filter((p) => Array.isArray(p) && p.length === 2 && p.every((n) => typeof n === 'number' && Number.isFinite(n)))
+        .slice(0, 200)
+        .map(([x, y]) => [Math.min(1000, Math.max(0, x)), Math.min(1000, Math.max(0, y))])
+      : [];
     return [{
       type: raw.type,
       label: typeof raw.label === 'string' ? raw.label.slice(0, 80) : raw.type,
@@ -65,6 +73,7 @@ Deno.serve(async (request) => {
       pattern: raw.pattern === 'motif' ? 'motif' : 'uni',
       styles: styles.length ? styles : ['casual'],
       box,
+      ...(mask.length >= 3 ? { mask } : {}),
     }];
   });
   return json({ items });

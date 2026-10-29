@@ -8,7 +8,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import AuroraScreen from '@/components/AuroraScreen';
 import { COLOR_HEX, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
-import { analyzeOutfitPhoto, cropPiece, type DetectedPiece } from '@/services/outfitAI';
+import { analyzeOutfitPhoto, cropPiece, cutoutPiece, isUsableMask, type DetectedPiece } from '@/services/outfitAI';
 import { loadWardrobe, saveWardrobe } from '@/storage/wardrobeStorage';
 import type { ClothingItem } from '@/types';
 
@@ -58,9 +58,18 @@ function OutfitImport({ onClose, onImported }: Omit<Props, 'visible'>) {
   const cropAll = async (list: Piece[], source: Photo) => {
     for (const piece of list) {
       if (!alive.current) return;
-      if (!piece.box) { patchPiece(piece.key, { shot: 'failed', shotError: 'Position de la pièce inconnue : la photo entière sera utilisée.' }); continue; }
+      if (!piece.box && !piece.mask) { patchPiece(piece.key, { shot: 'failed', shotError: 'Position de la pièce inconnue : la photo entière sera utilisée.' }); continue; }
       try {
-        const uri = await cropPiece(source.uri, source.width, source.height, piece.box);
+        // Contour exact si Gemini l'a donné, sinon simple rectangle autour de la pièce
+        let uri: string;
+        try {
+          uri = piece.mask && isUsableMask(piece.mask, piece.box)
+            ? cutoutPiece(source.base64, piece.mask)
+            : await cropPiece(source.uri, source.width, source.height, piece.box!);
+        } catch (e) {
+          if (!piece.box) throw e;
+          uri = await cropPiece(source.uri, source.width, source.height, piece.box);
+        }
         if (alive.current) patchPiece(piece.key, { shot: 'done', shotUri: uri });
       } catch (e) {
         if (alive.current) patchPiece(piece.key, { shot: 'failed', shotError: e instanceof Error ? e.message : undefined });
