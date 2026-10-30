@@ -19,6 +19,7 @@ import { useWardrobe } from '@/hooks/useWardrobe';
 import { useLifecycleLog } from '@/utils/lifecycleLog';
 import { loadHistory } from '@/storage/wardrobeStorage';
 import { recognizeClothing } from '@/services/clothingRecognition';
+import { isSubjectLiftAvailable, liftSubject } from '@/modules/subject-lift';
 import { removeClothingBackground } from '@/services/backgroundRemoval';
 import OutfitImportModal from '@/features/outfitImport/OutfitImportModal';
 import { allColors, type ClothingItem, type ClothingType, type ColorName, type Style } from '@/types';
@@ -276,6 +277,12 @@ export default function WardrobeScreen() {
     if (!draftUri) return;
     setRemovingBackground(true);
     try {
+      // Gratuit sur iPhone : détourage d'Apple ; sinon service en ligne (remove.bg)
+      const lifted = isSubjectLiftAvailable() ? await liftSubject(draftUri).catch((e) => { console.warn('Détourage iPhone :', e); return null; }) : null;
+      if (lifted) {
+        setDraftUri(lifted);
+        return;
+      }
       const imageBase64 = await removeClothingBackground(draftUri);
       const result = new File(Paths.cache, `detoure-${Date.now()}.png`);
       result.create({ intermediates: true, overwrite: true });

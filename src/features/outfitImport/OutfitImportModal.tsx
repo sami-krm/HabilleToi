@@ -8,6 +8,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import AuroraScreen from '@/components/AuroraScreen';
 import { COLOR_HEX, TYPE_LABELS } from '@/constants/clothing';
 import { Palette } from '@/constants/theme';
+import { isSubjectLiftAvailable, liftSubject } from '@/modules/subject-lift';
 import { analyzeOutfitPhoto, cropPiece, cutoutPiece, isUsableMask, type DetectedPiece } from '@/services/outfitAI';
 import { loadWardrobe, saveWardrobe } from '@/storage/wardrobeStorage';
 import type { ClothingItem } from '@/types';
@@ -70,6 +71,8 @@ function OutfitImport({ onClose, onImported }: Omit<Props, 'visible'>) {
           if (!piece.box) throw e;
           uri = await cropPiece(source.uri, source.width, source.height, piece.box);
         }
+        // Sur iPhone (build de l'app, pas Expo Go) : on retire le fond autour de la pièce découpée
+        if (isSubjectLiftAvailable()) uri = await liftSubject(uri).catch(() => uri);
         if (alive.current) patchPiece(piece.key, { shot: 'done', shotUri: uri });
       } catch (e) {
         if (alive.current) patchPiece(piece.key, { shot: 'failed', shotError: e instanceof Error ? e.message : undefined });
