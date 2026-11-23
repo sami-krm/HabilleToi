@@ -93,6 +93,10 @@ Les variables publiques de l'app se trouvent dans `.env` (modèle : [`.env.examp
 | `EXPO_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé publique `anon` de Supabase |
 | `EXPO_PUBLIC_STYLIST_URL` | *(optionnel)* proxy dédié pour le styliste |
+| `EXPO_PUBLIC_RECOGNITION_URL` | *(optionnel)* ton propre service de reconnaissance, utilisé en secours sans compte connecté |
+| `EXPO_PUBLIC_APP_TOKEN` | *(optionnel)* jeton de ce service, à choisir toi-même |
+
+> Ces valeurs sont **vides** dans le dépôt : remplis-les avec **tes propres** valeurs dans ton `.env` local, qui n'est jamais versionné. Laisse-les vides si tu n'en as pas besoin : l'app fonctionne sans.
 
 Les clés privées (Gemini, détourage) restent **côté serveur**, en secrets Supabase. Le guide pas à pas pour créer le projet, appliquer la migration et déployer les Edge Functions se trouve dans [`supabase/README.md`](supabase/README.md).
 
