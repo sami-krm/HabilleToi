@@ -1,56 +1,125 @@
-# Welcome to your Expo app 👋
+<p align="center">
+  <img src="assets/branding/habilletoi-icon.svg" alt="Logo HabilleToi" width="120">
+</p>
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<h1 align="center">HabilleToi</h1>
 
-## Get started
+<p align="center">
+  <strong>Ta tenue du jour, composée avec tes vêtements et la météo.</strong><br>
+  Application mobile iOS / Android en React Native et Expo.
+</p>
 
-1. Install dependencies
+<p align="center">
+  <img alt="Expo" src="https://img.shields.io/badge/Expo-57-000020?logo=expo&logoColor=white">
+  <img alt="React Native" src="https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
+  <img alt="Supabase" src="https://img.shields.io/badge/Supabase-Edge%20Functions-3ECF8E?logo=supabase&logoColor=white">
+  <img alt="Gemini" src="https://img.shields.io/badge/IA-Gemini-8E75B2?logo=googlegemini&logoColor=white">
+</p>
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Sommaire
 
-   ```bash
-   npx expo start
-   ```
+- [Fonctionnalités](#fonctionnalités)
+- [Stack technique](#stack-technique)
+- [Démarrage rapide](#démarrage-rapide)
+- [Configuration](#configuration)
+- [Structure du projet](#structure-du-projet)
+- [Confidentialité](#confidentialité)
 
-In the output, you'll find options to open the app in a
+## Fonctionnalités
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### ☀️ Tenue du jour
+- Des tenues composées chaque jour avec **tes vêtements propres**, selon la météo d'aujourd'hui, de demain ou d'après-demain.
+- **Swipe** à droite pour garder, à gauche pour passer, puis « **Je la porte** » pour l'ajouter à l'historique.
+- Choix de l'**occasion** de la journée, devinée si tu le souhaites à partir de ton **calendrier**.
+- Fiche « **Plus d'infos** » : pluie, vent et détails de la journée.
+- **Widget** iOS de la tenue du jour et **rappel chaque matin** par notification.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 👕 Dressing
+- **Photo d'un vêtement** : l'app reconnaît son type et ses couleurs (Gemini Flash-Lite).
+- **Détourage** gratuit et local sur iPhone (Vision), ou via un service en ligne.
+- « **Tenue** » : ajoute d'un coup toutes les pièces repérées sur une photo de toi en pied, avec des photos façon boutique.
+- « **Importer** » : récupère tes achats depuis **41 boutiques en ligne**, ou depuis ton propre site.
+- Vêtements, accessoires, favoris et historique de ce que tu as porté.
 
-## Get a fresh project
+### 🧳 Valise
+- Indique ta destination et tes dates : l'app prépare une **valise adaptée à la météo du séjour**.
+- Coche les pièces au fur et à mesure que tu les ranges.
 
-When you're ready, run:
+### ✨ Styliste et compte
+- **Assistant styliste** : pose une question, il répond à partir de ton dressing et de la météo.
+- **Compte et sauvegarde en ligne** pour retrouver ton dressing sur tous tes appareils.
+- Questionnaire d'accueil et tutoriel à la première ouverture.
+
+## Stack technique
+
+| Domaine | Outils |
+|---|---|
+| App mobile | Expo SDK 57, React Native 0.86, React 19, Expo Router (onglets natifs), TypeScript |
+| Météo | [Open-Meteo](https://open-meteo.com) (prévisions, archives, recherche de villes) |
+| Back-end | Supabase : authentification, stockage, Edge Functions |
+| IA | Google Gemini : reconnaissance des vêtements, analyse de tenue, photos boutique, styliste |
+| Natif | Module Swift `subject-lift` (détourage Vision sur iOS), widget iOS via `expo-widgets` |
+
+## Démarrage rapide
+
+**Prérequis :** Node.js LTS, npm, et Xcode ou Android Studio pour les builds natifs.
 
 ```bash
-npm run reset-project
+git clone https://github.com/sami-krm/meteo-vetements.git
+cd meteo-vetements
+npm install
+cp .env.example .env
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Renseigne `.env` (voir [Configuration](#configuration)), puis lance l'app :
 
-### Other setup steps
+```bash
+npm run ios       # build de développement iOS
+npm run android   # build de développement Android
+npm start         # serveur Expo (Expo Go, web)
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+> Le widget, le détourage sur iPhone et certaines fonctions natives demandent un **build de développement** : ils ne sont pas disponibles dans Expo Go. L'app reste utilisable sans eux.
 
-## Learn more
+## Configuration
 
-To learn more about developing your project with Expo, look at the following resources:
+Les variables publiques de l'app se trouvent dans `.env` (modèle : [`.env.example`](.env.example)) :
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Variable | Rôle |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | URL du projet Supabase |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Clé publique `anon` de Supabase |
+| `EXPO_PUBLIC_STYLIST_URL` | *(optionnel)* proxy dédié pour le styliste |
 
-## Join the community
+Les clés privées (Gemini, détourage) restent **côté serveur**, en secrets Supabase. Le guide pas à pas pour créer le projet, appliquer la migration et déployer les Edge Functions se trouve dans [`supabase/README.md`](supabase/README.md).
 
-Join our community of developers creating universal apps.
+## Structure du projet
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+.
+├── src/
+│   ├── app/               # écrans (Expo Router) : accueil, dressing, valise, tenues
+│   ├── components/        # composants d'interface partagés
+│   ├── features/          # import, onboarding, valise, tutoriel, notifications…
+│   ├── services/          # météo, génération de tenues, IA, synchronisation
+│   ├── storage/           # persistance locale
+│   ├── hooks/             # hooks React (dressing, profil, historique)
+│   └── widgets/           # widget iOS de la tenue du jour
+├── modules/subject-lift/  # module natif Swift (détourage Vision)
+├── plugins/               # config plugins Expo
+├── supabase/              # Edge Functions, migration SQL et guide
+└── assets/                # icônes, logo et images
+```
+
+## Confidentialité
+
+- Le dressing, les favoris et l'historique sont stockés **sur l'appareil**. La sauvegarde en ligne est facultative, privée et limitée à ton compte.
+- L'assistant styliste reçoit une **liste texte** de tes vêtements et la météo, jamais tes photos.
+- Une photo n'est envoyée pour le détourage ou l'analyse qu'après ton action.
+
+---
+
+<p align="center">Projet personnel de <a href="https://github.com/sami-krm">sami-krm</a>.</p>
