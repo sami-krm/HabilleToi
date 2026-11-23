@@ -68,8 +68,8 @@
 **Prérequis :** Node.js LTS, npm, et Xcode ou Android Studio pour les builds natifs.
 
 ```bash
-git clone https://github.com/sami-krm/meteo-vetements.git
-cd meteo-vetements
+git clone https://github.com/sami-krm/HabilleToi.git
+cd HabilleToi
 npm install
 cp .env.example .env
 ```
