@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <img src="docs/apercu.png" alt="Écrans de HabilleToi : tenue du jour selon la météo, détails météo, assistant styliste, dressing" width="100%">
+</p>
+
+<p align="center">
   <img alt="Expo" src="https://img.shields.io/badge/Expo-57-000020?logo=expo&logoColor=white">
   <img alt="React Native" src="https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
